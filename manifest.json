@@ -1,0 +1,9 @@
+{
+  "name": "EverythingCanDie",
+  "version_number": "1.0.0",
+  "website_url": "https://github.com/nyakowint",
+  "description": "Test Mod To Make Everything Equal...in Death.",
+  "dependencies": [
+    "BepInEx-BepInExPack-5.4.2100"
+  ]
+}

@@ -12,7 +12,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "Everything Can Die";
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
@@ -39,7 +39,7 @@ namespace EverythingCanDie
             var killMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient),
                 new[] { typeof(bool) });
             var killPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.KillEnemyPatch)));
-            Harmony.Patch(killMethod, postfix: killPatch);
+            Harmony.Patch(killMethod, killPatch);
             
             var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new []{ typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });
             var hitPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.HitEnemyLocalPatch)));

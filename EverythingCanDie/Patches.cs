@@ -12,7 +12,7 @@ namespace EverythingCanDie
 
         public static bool KillEnemyPatch(EnemyAI __instance, bool overrideDestroy = false)
         {
-            if (__instance.isEnemyDead) return false;
+            if (__instance.isEnemyDead) return true;
             Plugin.Log.LogInfo($"Exploding {__instance.name}");
             __instance.enemyType.canDie = true;
             var enemyPos = __instance.transform.position;

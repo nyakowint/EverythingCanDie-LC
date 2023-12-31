@@ -24,6 +24,16 @@ namespace EverythingCanDie
             yield return new WaitForSeconds(0.6f);
             SoundManager.Instance.earsRingingTimer = effectSeverity;
         }
+
+        private static void VisualiseShot(Vector3 start, Vector3 end)
+        {
+            GameObject trail = new GameObject("Trail Visual");
+            FadeOutLine line = trail.AddComponent<FadeOutLine>();
+            line.start = start;
+            line.end = end;
+            line.Prep();
+        }
+
         public static void ShootGun(ShotgunItem gun, Vector3 shotgunPosition, Vector3 shotgunForward)
         {
             PlayerControllerB holder = gun.playerHeldBy;
@@ -132,6 +142,7 @@ namespace EverythingCanDie
                         break; // wall or other obstruction
                     }
                 }
+                VisualiseShot(shotgunPosition, end);
             }
 
             // deal damage all at once - prevents piercing alive and reduces damage calls
@@ -219,6 +230,40 @@ namespace EverythingCanDie
             {
                 gun.gunBulletsRicochetAudio.transform.position = ray.GetPoint(hitInfo.distance - 0.5f);
                 gun.gunBulletsRicochetAudio.Play();
+            }
+        }
+
+        public class FadeOutLine : MonoBehaviour
+        {
+            private const float lifetime = 0.4f;
+            private const float width = 0.02f;
+            private static readonly Color col = new Color(1f, 0f, 0f);
+
+            private float alive = 0f;
+            private LineRenderer line;
+            public Vector3 start, end;
+            private static readonly Material mat = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
+            public void Prep()
+            {
+                var len = Vector3.Distance(start, end);
+                var lenFrac = (range - len) / range;
+                line = gameObject.AddComponent<LineRenderer>();
+                line.startColor = col;
+                line.endColor = col * lenFrac + Color.black * (1f - lenFrac);
+                line.startWidth = width;
+                line.endWidth = lenFrac * width;
+                line.SetPositions(new Vector3[] { start, end });
+                line.material = mat;
+            }
+            void Update()
+            {
+                alive += Time.deltaTime;
+                if (alive >= lifetime) Destroy(gameObject);
+                else
+                {
+                    line.startColor = new Color(col.r, col.g, col.b, (lifetime - alive) / lifetime);
+                    line.endColor = new Color(line.endColor.r, line.endColor.g, line.endColor.b, (lifetime - alive) / lifetime);
+                }
             }
         }
     }

@@ -167,12 +167,12 @@ namespace EverythingCanDie
                                     }
                                 }
                             }
+                            else if (t.GetComponent<IHittable>() != null)
+                            {
+                                IHittable hit = t.GetComponent<IHittable>();
+                                hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
+                            }
                         }
-                    }
-                    else if (t.GetComponent<IHittable>() != null)
-                    {
-                        IHittable hit = t.GetComponent<IHittable>();
-                        hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
                     }
                 }
             });

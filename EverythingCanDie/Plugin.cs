@@ -37,6 +37,7 @@ namespace EverythingCanDie
             Log = Logger;
             Harmony = new Harmony(PluginInfo.Guid);
             Harmony.PatchAll(typeof(Plugin));
+            Harmony.PatchAll(typeof(Patches));
             Logger.LogInfo(":]");
 
             var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });

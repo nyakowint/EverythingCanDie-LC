@@ -38,13 +38,6 @@ namespace EverythingCanDie
             Harmony = new Harmony(PluginInfo.Guid);
             Harmony.PatchAll(typeof(Plugin));
             Logger.LogInfo(":]");
-            var managerStartMethod = AccessTools.Method(typeof(RoundManager), "Start", new System.Type[] { });
-            var managerStartPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.RoundManagerPatch)));
-            Harmony.Patch(managerStartMethod, postfix: managerStartPatch);
-
-            var startMethod = AccessTools.Method(typeof(StartOfRound), "Start", new System.Type[] { });
-            var startPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.StartOfRoundPatch)));
-            Harmony.Patch(startMethod, postfix: startPatch);
 
             var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });
             var hitPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.HitEnemyLocalPatch)));

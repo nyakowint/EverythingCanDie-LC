@@ -12,7 +12,10 @@ namespace EverythingCanDie
     public class Patches
     {
         private static readonly int Damage = Animator.StringToHash("damage");
-        public static void RoundManagerPatch(RoundManager __instance)
+        [HarmonyPatch(typeof(StartOfRound))]
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        public static void RoundManagerPatch()
         {
             if (Plugin.explosionPrefab == null && StartOfRound.Instance.explosionPrefab != null)
             {
@@ -44,7 +47,10 @@ namespace EverythingCanDie
             }
         }
 
-        public static void StartOfRoundPatch(StartOfRound __instance)
+        [HarmonyPatch(typeof(RoundManager))]
+        [HarmonyPatch("Start")]
+        [HarmonyPostfix]
+        public static void StartOfRoundPatch()
         {
             if (Plugin.explosionPrefab == null && StartOfRound.Instance.explosionPrefab != null)
             {

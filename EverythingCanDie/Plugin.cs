@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using BepInEx.Configuration;
 using GameNetcodeStuff;
 using HarmonyLib;
 using System.Collections.Generic;

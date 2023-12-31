@@ -1,6 +1,8 @@
-﻿using GameNetcodeStuff;
+﻿using BepInEx.Configuration;
+using GameNetcodeStuff;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -32,6 +34,51 @@ namespace EverythingCanDie
             line.start = start;
             line.end = end;
             line.Prep();
+        }
+
+        public static string RemoveWhitespaces(string source)
+        {
+            return string.Join("", source.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
+        }
+
+        public static string RemoveSpecialCharacters(string source)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (char c in source)
+            {
+                if ((c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'))
+                {
+                    sb.Append(c);
+                }
+            }
+            return sb.ToString();
+        }
+
+        public static string RemoveInvalidCharacters(string source)
+        {
+            return RemoveWhitespaces(RemoveSpecialCharacters(source));
+        }
+
+        public static bool CanMob(string parentIdentifier, string identifier, string mobName)
+        {
+            string mob = RemoveInvalidCharacters(mobName).ToUpper();
+            if (Plugin.Instance.Config[new ConfigDefinition("Mobs", parentIdentifier)].BoxedValue.ToString().ToUpper().Equals("TRUE"))
+            {
+                foreach (ConfigDefinition entry in Plugin.Instance.Config.Keys)
+                {
+                    if (RemoveInvalidCharacters(entry.Key.ToUpper()).Equals(RemoveInvalidCharacters(mob + identifier.ToUpper())))
+                    {
+                        return Plugin.Instance.Config[entry].BoxedValue.ToString().ToUpper().Equals("TRUE");
+                    }
+                }
+                Plugin.Log.LogInfo(identifier + ": No mob found!");
+                return false;
+            }
+            else
+            {
+                Plugin.Log.LogInfo(parentIdentifier + ": All mobs disabled!");
+            }
+            return false;
         }
 
         public static void ShootGun(ShotgunItem gun, Vector3 shotgunPosition, Vector3 shotgunForward)
@@ -142,7 +189,7 @@ namespace EverythingCanDie
                         break; // wall or other obstruction
                     }
                 }
-                VisualiseShot(shotgunPosition, end);
+                //VisualiseShot(shotgunPosition, end);
             }
 
             // deal damage all at once - prevents piercing alive and reduces damage calls
@@ -162,22 +209,30 @@ namespace EverythingCanDie
                         int damage = 1;
                         if (!enemy.mainScript.isEnemyDead)
                         {
-                            if (enemy.mainScript.creatureAnimator != null)
+                            if (CanMob("BoomableAllMobs", ".Boomable", enemy.mainScript.enemyType.enemyName))
                             {
-                                enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
+                                if (enemy.mainScript.creatureAnimator != null)
+                                {
+                                    enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
+                                }
+                                enemy.mainScript.enemyHP -= damage;
+                                if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
+                                {
+                                    enemy.mainScript.KillEnemyOnOwnerClient(true);
+                                }
                             }
-                            enemy.mainScript.enemyHP -= damage;
-                            if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
+                            else
                             {
-                                enemy.mainScript.KillEnemyOnOwnerClient(true);
+                                enemy.mainScript.HitEnemyOnLocalClient(damage);
                             }
                         }
                     }
+                    /*
                     else if (t.GetComponent<EnemyAI>() != null)
                     {
                         EnemyAI enemy = t.GetComponent<EnemyAI>();
                         int damage = 1;
-                        if (!enemy.isEnemyDead)
+                        if (CanMob("BoomableAllMobs", ".Boomable", enemy.enemyType.enemyName))
                         {
                             if (enemy.creatureAnimator != null)
                             {
@@ -189,15 +244,22 @@ namespace EverythingCanDie
                                 enemy.KillEnemyOnOwnerClient(true);
                             }
                         }
+                        else
+                        {
+                            enemy.HitEnemyOnLocalClient(damage);
+                        }
                     }
+                    */
                     else if (t.GetComponent<IHittable>() != null)
                     {
                         IHittable hit = t.GetComponent<IHittable>();
+                        hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
+                        /*
                         if (hit is EnemyAICollisionDetect)
                         {
                             EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
                             int damage = 1;
-                            if (!enemy.mainScript.isEnemyDead)
+                            if (CanMob("BoomableAllMobs", ".Boomable", enemy.mainScript.enemyType.enemyName))
                             {
                                 if (enemy.mainScript.creatureAnimator != null)
                                 {
@@ -208,6 +270,10 @@ namespace EverythingCanDie
                                 {
                                     enemy.mainScript.KillEnemyOnOwnerClient(true);
                                 }
+                            }
+                            else
+                            {
+                                enemy.mainScript.HitEnemyOnLocalClient(damage);
                             }
                         }
                         else if (hit is PlayerControllerB)
@@ -221,6 +287,7 @@ namespace EverythingCanDie
                         {
                             hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
                         }
+                        */
                     }
                 }
             });

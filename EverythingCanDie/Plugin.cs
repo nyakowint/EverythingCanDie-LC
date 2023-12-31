@@ -38,10 +38,13 @@ namespace EverythingCanDie
             Harmony = new Harmony(PluginInfo.Guid);
 
             Logger.LogInfo(":]");
+            var managerStartMethod = AccessTools.Method(typeof(RoundManager), "Start", new System.Type[] { });
+            var managerStartPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.RoundManagerPatch)));
+            Harmony.Patch(managerStartMethod, postfix: managerStartPatch);
 
             var startMethod = AccessTools.Method(typeof(StartOfRound), "Start", new System.Type[] { });
             var startPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.StartOfRoundPatch)));
-            Harmony.Patch(startMethod, prefix: startPatch);
+            Harmony.Patch(startMethod, postfix: startPatch);
 
             var shootMethod = AccessTools.Method(typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) });
             var shootPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.ReplaceShotgunCode)));

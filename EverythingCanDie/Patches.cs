@@ -63,10 +63,36 @@ namespace EverythingCanDie
             if (Plugin.explosionPrefab == null)
             {
                 Plugin.explosionPrefab = Object.Instantiate(StartOfRound.Instance.explosionPrefab);
+                Plugin.explosionPrefab.GetComponent<AudioSource>().volume = 0.35f;
                 Plugin.explosionPrefab.SetActive(false);
                 Object.DontDestroyOnLoad(Plugin.explosionPrefab);
             }
 
+            Plugin.enemies = Resources.FindObjectsOfTypeAll(typeof(EnemyType)).Cast<EnemyType>().Where(e => e != null).ToList();
+            Plugin.items = Resources.FindObjectsOfTypeAll(typeof(Item)).Cast<Item>().Where(i => i != null).ToList();
+
+            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "BoomableAllMobs")))
+            {
+                ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
+                "BoomableAllMobs", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "Leave On To Customise Mobs Below Or Turn Off To Make All Mobs Unable To Be Affected By This Mod."); // Description
+            }
+            foreach (EnemyType enemy in Plugin.enemies)
+            {
+                string mobName = ECDUtils.RemoveInvalidCharacters(enemy.enemyName);
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Boomable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Boomable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "If true this mob will explode and if immortal it will also be killable."); // Description
+                }
+            }
+        }
+
+        public static void RoundManagerPatch(RoundManager __instance)
+        {
             Plugin.enemies = Resources.FindObjectsOfTypeAll(typeof(EnemyType)).Cast<EnemyType>().Where(e => e != null).ToList();
             Plugin.items = Resources.FindObjectsOfTypeAll(typeof(Item)).Cast<Item>().Where(i => i != null).ToList();
 

@@ -10,7 +10,7 @@ namespace EverythingCanDie
     {
         public const float range = 30f;
 
-        static readonly int PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | 524288; //524288 = enemy mask
+        static readonly int PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | 2621448; //2621448 = enemy mask
         static readonly int ENEMY_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers;
 
         public static System.Random ShotgunRandom = new System.Random(0);
@@ -138,39 +138,77 @@ namespace EverythingCanDie
             targets.ForEach(t => {
                 if (t != null)
                 {
-                    if (t.GetComponent<NetworkBehaviour>() != null)
+                    if (t.GetComponent<PlayerControllerB>() != null)
                     {
-                        if (t.GetComponent<NetworkBehaviour>().IsSpawned)
+                        PlayerControllerB player = t.GetComponent<PlayerControllerB>();
+                        // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
+                        int damage = 20;
+                        player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
+                    }
+                    else if (t.GetComponent<EnemyAICollisionDetect>() != null)
+                    {
+                        EnemyAICollisionDetect enemy = t.GetComponent<EnemyAICollisionDetect>();
+                        int damage = 1;
+                        if (!enemy.mainScript.isEnemyDead)
                         {
-                            if (t.GetComponent<PlayerControllerB>() != null)
+                            if (enemy.mainScript.creatureAnimator != null)
                             {
-                                PlayerControllerB player = t.GetComponent<PlayerControllerB>();
-                                // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
-                                int damage = 20;
-                                player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
+                                enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
                             }
-                            else if (t.GetComponent<EnemyAICollisionDetect>() != null)
+                            enemy.mainScript.enemyHP -= damage;
+                            if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
                             {
-                                EnemyAICollisionDetect enemy = t.GetComponent<EnemyAICollisionDetect>();
-                                int damage = 1;
-                                if (!enemy.mainScript.isEnemyDead)
+                                enemy.mainScript.KillEnemyOnOwnerClient(true);
+                            }
+                        }
+                    }
+                    else if (t.GetComponent<EnemyAI>() != null)
+                    {
+                        EnemyAI enemy = t.GetComponent<EnemyAI>();
+                        int damage = 1;
+                        if (!enemy.isEnemyDead)
+                        {
+                            if (enemy.creatureAnimator != null)
+                            {
+                                enemy.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
+                            }
+                            enemy.enemyHP -= damage;
+                            if (!(enemy.enemyHP > 0) || enemy.IsOwner)
+                            {
+                                enemy.KillEnemyOnOwnerClient(true);
+                            }
+                        }
+                    }
+                    else if (t.GetComponent<IHittable>() != null)
+                    {
+                        IHittable hit = t.GetComponent<IHittable>();
+                        if (hit is EnemyAICollisionDetect)
+                        {
+                            EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
+                            int damage = 1;
+                            if (!enemy.mainScript.isEnemyDead)
+                            {
+                                if (enemy.mainScript.creatureAnimator != null)
                                 {
-                                    if (enemy.mainScript.creatureAnimator != null)
-                                    {
-                                        enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                                    }
-                                    enemy.mainScript.enemyHP -= damage;
-                                    if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
-                                    {
-                                        enemy.mainScript.KillEnemyOnOwnerClient(true);
-                                    }
+                                    enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
+                                }
+                                enemy.mainScript.enemyHP -= damage;
+                                if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
+                                {
+                                    enemy.mainScript.KillEnemyOnOwnerClient(true);
                                 }
                             }
-                            else if (t.GetComponent<IHittable>() != null)
-                            {
-                                IHittable hit = t.GetComponent<IHittable>();
-                                hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
-                            }
+                        }
+                        else if (hit is PlayerControllerB)
+                        {
+                            PlayerControllerB player = (PlayerControllerB)hit;
+                            // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
+                            int damage = 33;
+                            player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
+                        }
+                        else
+                        {
+                            hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
                         }
                     }
                 }

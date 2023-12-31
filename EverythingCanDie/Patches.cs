@@ -12,8 +12,7 @@ namespace EverythingCanDie
     public class Patches
     {
         private static readonly int Damage = Animator.StringToHash("damage");
-        [HarmonyPatch(typeof(StartOfRound))]
-        [HarmonyPatch("Start")]
+        [HarmonyPatch(typeof(RoundManager), "Start")]
         [HarmonyPostfix]
         public static void RoundManagerPatch()
         {
@@ -47,8 +46,7 @@ namespace EverythingCanDie
             }
         }
 
-        [HarmonyPatch(typeof(RoundManager))]
-        [HarmonyPatch("Start")]
+        [HarmonyPatch(typeof(StartOfRound), "Start")]
         [HarmonyPostfix]
         public static void StartOfRoundPatch()
         {

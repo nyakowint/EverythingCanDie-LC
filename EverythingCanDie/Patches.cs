@@ -23,6 +23,7 @@ namespace EverythingCanDie
                 Plugin.explosionPrefab.SetActive(false);
                 Object.DontDestroyOnLoad(Plugin.explosionPrefab);
             }
+
             Plugin.enemies = Resources.FindObjectsOfTypeAll(typeof(EnemyType)).Cast<EnemyType>().Where(e => e != null).ToList();
             Plugin.items = Resources.FindObjectsOfTypeAll(typeof(Item)).Cast<Item>().Where(i => i != null).ToList();
 
@@ -44,6 +45,7 @@ namespace EverythingCanDie
                                              "If true this mob will explode and if immortal it will also be killable."); // Description
                 }
             }
+            Plugin.Instance.Config.Save();
         }
 
         [HarmonyPatch(typeof(StartOfRound), "Start")]
@@ -79,6 +81,7 @@ namespace EverythingCanDie
                                              "If true this mob will explode and if immortal it will also be killable."); // Description
                 }
             }
+            Plugin.Instance.Config.Save();
         }
 
         public static bool KillEnemyPatch(EnemyAI __instance, bool overrideDestroy = false)

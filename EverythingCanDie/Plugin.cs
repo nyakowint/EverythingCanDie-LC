@@ -36,7 +36,7 @@ namespace EverythingCanDie
             Instance = this;
             Log = Logger;
             Harmony = new Harmony(PluginInfo.Guid);
-
+            Harmony.PatchAll(typeof(Plugin));
             Logger.LogInfo(":]");
             var managerStartMethod = AccessTools.Method(typeof(RoundManager), "Start", new System.Type[] { });
             var managerStartPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.RoundManagerPatch)));

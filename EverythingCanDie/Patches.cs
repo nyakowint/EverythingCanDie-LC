@@ -1,4 +1,5 @@
 ﻿using GameNetcodeStuff;
+using HarmonyLib;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -16,8 +17,8 @@ namespace EverythingCanDie
             Plugin.Log.LogInfo($"Exploding {__instance.name}");
             __instance.enemyType.canDie = true;
             var enemyPos = __instance.transform.position;
-            Object.Instantiate(StartOfRound.Instance.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
-                RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+            Object.Instantiate(Plugin.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
+            RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
             HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
             return true;
         }
@@ -25,14 +26,37 @@ namespace EverythingCanDie
         public static void HitEnemyLocalPatch(int force, Vector3 hitDirection, PlayerControllerB playerWhoHit,
             bool playHitSFX, EnemyAI __instance)
         {
-            if (__instance.isEnemyDead) return;
-            Plugin.Log.LogInfo(
-                $"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {__instance.enemyType.canDie}");
-            __instance.creatureAnimator.SetTrigger(Damage);
-            __instance.enemyHP -= force;
-            if (__instance.enemyHP > 0 || !__instance.IsOwner) return;
-            Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
-            __instance.KillEnemyOnOwnerClient(true);
+            if (!__instance.isEnemyDead) 
+            {
+                Plugin.Log.LogInfo(
+                    $"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {__instance.enemyType.canDie}");
+                if (__instance.creatureAnimator != null)
+                {
+                    __instance.creatureAnimator.SetTrigger(Damage);
+                }
+                __instance.enemyHP -= force;
+                if (!(__instance.enemyHP > 0) || __instance.IsOwner)
+                {
+                    Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
+                    __instance.KillEnemyOnOwnerClient(true);
+                }
+            }
+        }
+
+        public static bool ReplaceShotgunCode(ShotgunItem __instance, Vector3 shotgunPosition, Vector3 shotgunForward)
+        {
+            ECDUtils.ShootGun(__instance, shotgunPosition, shotgunForward);
+            return false;
+        }
+
+        public static void StartOfRoundPatch(StartOfRound __instance)
+        {
+            if (Plugin.explosionPrefab == null)
+            {
+                Plugin.explosionPrefab = Object.Instantiate(StartOfRound.Instance.explosionPrefab);
+                Plugin.explosionPrefab.SetActive(false);
+                Object.DontDestroyOnLoad(Plugin.explosionPrefab);
+            }
         }
     }
 }

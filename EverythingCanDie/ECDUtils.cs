@@ -251,8 +251,6 @@ namespace EverythingCanDie
                     else if (t.GetComponent<IHittable>() != null)
                     {
                         IHittable hit = t.GetComponent<IHittable>();
-                        hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
-                        /*
                         if (hit is EnemyAICollisionDetect)
                         {
                             EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
@@ -285,7 +283,6 @@ namespace EverythingCanDie
                         {
                             hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
                         }
-                        */
                     }
                 }
             });

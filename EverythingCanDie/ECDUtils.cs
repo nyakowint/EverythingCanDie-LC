@@ -149,21 +149,20 @@ namespace EverythingCanDie
                                 int damage = 20;
                                 player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
                             }
-
-                            else if (t.GetComponent<EnemyAI>() != null)
+                            else if (t.GetComponent<EnemyAICollisionDetect>() != null)
                             {
-                                EnemyAI enemy = t.GetComponent<EnemyAI>();
+                                EnemyAICollisionDetect enemy = t.GetComponent<EnemyAICollisionDetect>();
                                 int damage = 1;
-                                if (!enemy.isEnemyDead)
+                                if (!enemy.mainScript.isEnemyDead)
                                 {
-                                    if (enemy.creatureAnimator != null)
+                                    if (enemy.mainScript.creatureAnimator != null)
                                     {
-                                        enemy.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
+                                        enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
                                     }
-                                    enemy.enemyHP -= damage;
-                                    if (!(enemy.enemyHP > 0) || enemy.IsOwner)
+                                    enemy.mainScript.enemyHP -= damage;
+                                    if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
                                     {
-                                        enemy.KillEnemyOnOwnerClient(true);
+                                        enemy.mainScript.KillEnemyOnOwnerClient(true);
                                     }
                                 }
                             }

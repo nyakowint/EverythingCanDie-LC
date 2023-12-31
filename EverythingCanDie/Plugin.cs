@@ -1,5 +1,4 @@
-﻿using System.Reflection;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
@@ -21,6 +20,7 @@ namespace EverythingCanDie
         public static Plugin Instance;
         public static Harmony Harmony;
         public static ManualLogSource Log;
+        public static GameObject explosionPrefab;
 
         private void Awake()
         {
@@ -36,15 +36,23 @@ namespace EverythingCanDie
 
             Logger.LogInfo(":]");
 
-            var killMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient),
-                new[] { typeof(bool) });
-            var killPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.KillEnemyPatch)));
-            Harmony.Patch(killMethod, killPatch);
+            var startMethod = AccessTools.Method(typeof(StartOfRound), "Start", new System.Type[] { });
+            var startPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.StartOfRoundPatch)));
+            Harmony.Patch(startMethod, prefix: startPatch);
+
+            var shootMethod = AccessTools.Method(typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) });
+            var shootPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.ReplaceShotgunCode)));
+            Harmony.Patch(shootMethod, prefix: shootPatch);
             
             var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new []{ typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });
             var hitPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.HitEnemyLocalPatch)));
             Harmony.Patch(hitMethod, postfix: hitPatch);
-            
+
+            var killMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient),
+                new[] { typeof(bool) });
+            var killPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.KillEnemyPatch)));
+            Harmony.Patch(killMethod, killPatch);
+
         }
     }
 }

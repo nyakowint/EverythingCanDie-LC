@@ -46,11 +46,7 @@ namespace EverythingCanDie
             var startPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.StartOfRoundPatch)));
             Harmony.Patch(startMethod, postfix: startPatch);
 
-            var shootMethod = AccessTools.Method(typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) });
-            var shootPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.ReplaceShotgunCode)));
-            Harmony.Patch(shootMethod, prefix: shootPatch);
-            
-            var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new []{ typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });
+            var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });
             var hitPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.HitEnemyLocalPatch)));
             Harmony.Patch(hitMethod, postfix: hitPatch);
 
@@ -58,6 +54,10 @@ namespace EverythingCanDie
                 new[] { typeof(bool) });
             var killPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.KillEnemyPatch)));
             Harmony.Patch(killMethod, killPatch);
+
+            var shootMethod = AccessTools.Method(typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) });
+            var shootPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.ReplaceShotgunCode)));
+            Harmony.Patch(shootMethod, prefix: shootPatch);
         }
     }
 }

@@ -2,6 +2,7 @@
 using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
+using System.Collections.Generic;
 using UnityEngine;
 
 
@@ -11,7 +12,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "Everything Can Die";
-        public const string Version = "1.1.0";
+        public const string Version = "1.2.0";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
@@ -21,6 +22,8 @@ namespace EverythingCanDie
         public static Harmony Harmony;
         public static ManualLogSource Log;
         public static GameObject explosionPrefab;
+        public static List<EnemyType> enemies;
+        public static List<Item> items;
 
         private void Awake()
         {
@@ -52,7 +55,6 @@ namespace EverythingCanDie
                 new[] { typeof(bool) });
             var killPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.KillEnemyPatch)));
             Harmony.Patch(killMethod, killPatch);
-
         }
     }
 }

@@ -227,7 +227,6 @@ namespace EverythingCanDie
                             }
                         }
                     }
-                    /*
                     else if (t.GetComponent<EnemyAI>() != null)
                     {
                         EnemyAI enemy = t.GetComponent<EnemyAI>();
@@ -249,7 +248,6 @@ namespace EverythingCanDie
                             enemy.HitEnemyOnLocalClient(damage);
                         }
                     }
-                    */
                     else if (t.GetComponent<IHittable>() != null)
                     {
                         IHittable hit = t.GetComponent<IHittable>();

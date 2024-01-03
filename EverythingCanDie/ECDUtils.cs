@@ -11,8 +11,8 @@ namespace EverythingCanDie
     internal class ECDUtils
     {
         public const float range = 30f;
-
-        static readonly int PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | 2621448; //2621448 = enemy mask
+        static readonly int ENEMY_MASK = 1 << 19;
+        static readonly int PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | ENEMY_MASK | 2621448; //2621448 = enemy mask
         static readonly int ENEMY_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers;
 
         public static System.Random ShotgunRandom = new System.Random(0);
@@ -177,7 +177,7 @@ namespace EverythingCanDie
                         // precaution: hit enemy without hitting hittable (immune to shovels?)
                         if (hits[j].collider.TryGetComponent(out EnemyAI ai))
                         {
-                            if (playerFired && !ai.isEnemyDead && ai.enemyHP > 0 && ai.enemyType.canDie)
+                            if (playerFired && !ai.isEnemyDead && ai.enemyHP > 0)
                             {
                                 targets.Add(ai.gameObject);
                                 end = hits[j].point;
@@ -216,7 +216,7 @@ namespace EverythingCanDie
                                     enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
                                 }
                                 enemy.mainScript.enemyHP -= damage;
-                                if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
+                                if (enemy.mainScript.enemyHP <= 0 && enemy.mainScript.IsOwner)
                                 {
                                     enemy.mainScript.KillEnemyOnOwnerClient(true);
                                 }
@@ -238,7 +238,7 @@ namespace EverythingCanDie
                                 enemy.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
                             }
                             enemy.enemyHP -= damage;
-                            if (!(enemy.enemyHP > 0) || enemy.IsOwner)
+                            if (enemy.enemyHP <= 0 && enemy.IsOwner)
                             {
                                 enemy.KillEnemyOnOwnerClient(true);
                             }
@@ -262,7 +262,7 @@ namespace EverythingCanDie
                                     enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
                                 }
                                 enemy.mainScript.enemyHP -= damage;
-                                if (!(enemy.mainScript.enemyHP > 0) || enemy.mainScript.IsOwner)
+                                if (enemy.mainScript.enemyHP <= 0 && enemy.mainScript.IsOwner)
                                 {
                                     enemy.mainScript.KillEnemyOnOwnerClient(true);
                                 }

@@ -5,6 +5,7 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Reflection;
 
 
 namespace EverythingCanDie
@@ -28,31 +29,24 @@ namespace EverythingCanDie
 
         private void Awake()
         {
-            if (Instance != null)
-            {
-                Destroy(this);
-                return;
-            }
-
-            Instance = this;
-            Log = Logger;
             Harmony = new Harmony(PluginInfo.Guid);
+            if (Instance == null)
+            {
+                Instance = this;
+            }
+            Log = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.Guid);
             Harmony.PatchAll(typeof(Plugin));
             Harmony.PatchAll(typeof(Patches));
+            MethodInfo AI_KillEnemy_Method = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient), null, null);
+            MethodInfo KillEnemy_Patch_Method = AccessTools.Method(typeof(Patches), nameof(Patches.KillEnemyPatch), null, null);
+            Harmony.Patch(AI_KillEnemy_Method, new HarmonyMethod(KillEnemy_Patch_Method), null, null, null, null);
+            MethodInfo AI_HitEnemy_Method = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), null, null);
+            MethodInfo HitEnemy_Patch_Method = AccessTools.Method(typeof(Patches), nameof(Patches.HitEnemyLocalPatch), null, null);
+            Harmony.Patch(AI_HitEnemy_Method, new HarmonyMethod(HitEnemy_Patch_Method), null, null, null, null);
+            MethodInfo Shotgun_Method = AccessTools.Method(typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), null, null);
+            MethodInfo Shotgun_Patch_Method = AccessTools.Method(typeof(Patches), nameof(Patches.ReplaceShotgunCode), null, null);
+            Harmony.Patch(Shotgun_Method, new HarmonyMethod(Shotgun_Patch_Method), null, null, null, null);
             Logger.LogInfo(":]");
-
-            var hitMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) });
-            var hitPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.HitEnemyLocalPatch)));
-            Harmony.Patch(hitMethod, postfix: hitPatch);
-
-            var killMethod = AccessTools.Method(typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient),
-                new[] { typeof(bool) });
-            var killPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.KillEnemyPatch)));
-            Harmony.Patch(killMethod, killPatch);
-
-            var shootMethod = AccessTools.Method(typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) });
-            var shootPatch = new HarmonyMethod(typeof(Patches).GetMethod(nameof(Patches.ReplaceShotgunCode)));
-            Harmony.Patch(shootMethod, prefix: shootPatch);
         }
     }
 }

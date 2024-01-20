@@ -8,7 +8,6 @@ using Object = UnityEngine.Object;
 using Unity.Netcode;
 
 // ReSharper disable InconsistentNaming
-
 namespace EverythingCanDie
 {
     public class Patches
@@ -20,57 +19,54 @@ namespace EverythingCanDie
             Plugin.enemies = Resources.FindObjectsOfTypeAll(typeof(EnemyType)).Cast<EnemyType>().Where(e => e != null).ToList();
             Plugin.items = Resources.FindObjectsOfTypeAll(typeof(Item)).Cast<Item>().Where(i => i != null).ToList();
 
-            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "BoomableAllMobs")))
+            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "UnimmortalAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
-                "BoomableAllMobs", // The key of the configuration option in the configuration file
+                "UnimmortalAllMobs", // The key of the configuration option in the configuration file
                                              true, // The default value
-                                             "Leave On To Customise Mobs Below Or Turn Off To Make All Mobs Unable To Be Affected By This Mod."); // Description
+                                             "Leave On To Customise Mobs Below Or Turn Off To Make All Mobs Return To Normal(Make Immortal mobs immortal again)."); // Description
             }
-            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "DefaultHealthAllMobs")))
+            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "ExplosionEffectAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
-                "DefaultHealthAllMobs", // The key of the configuration option in the configuration file
+                "ExplosionEffectAllMobs", // The key of the configuration option in the configuration file
                                              false, // The default value
-                                             "If this is set to true then none of the health values will matter and will be default vanilla"); // Description
+                                             "If this is set to true then explosion effect stays otherwise when false all explosions on death will not appear."); // Description
             }
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "HealthAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
                 "HealthAllMobs", // The key of the configuration option in the configuration file
                                              true, // The default value
-                                             "If this is set to false it will be set to health values I set otherwise have fun configging"); // Description
+                                             "If this is set to false the enemies health will remain the same otherwise have fun configging."); // Description
             }
             foreach (EnemyType enemy in Plugin.enemies)
             {
                 string mobName = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Boomable")))
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Unimmortal")))
                 {
                     ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Boomable", // The key of the configuration option in the configuration file
+                                             mobName + ".Unimmortal", // The key of the configuration option in the configuration file
                                              true, // The default value
                                              "If true this mob will explode and if immortal it will also be killable."); // Description
                 }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Explodeable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Explodeable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether to spawn an explosion effect(Default on)"); // Description
+                }
                 if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
-                    ConfigEntry<int> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Health", // The key of the configuration option in the configuration file
-                                             3, // The default value
-                                             "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
-                {
-                    foreach (ConfigDefinition def in Plugin.Instance.Config.Keys)
-                    {
-                        CreateHealthConfigEntry(mobName, def);
-                    }
+                    CreateHealthConfigEntry(enemy);
                 }
             }
 
             if (StartOfRound.Instance != null)
             {
                 Plugin.ENEMY_MASK = (1 << 19);
-                Plugin.PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | Plugin.ENEMY_MASK | 2621448; //2621448 = enemy mask
+                Plugin.PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | (Plugin.ENEMY_MASK | 2621448); //2621448 = enemy mask
                 Plugin.ENEMY_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers;
                 if (Plugin.explosionPrefab == null && StartOfRound.Instance.explosionPrefab != null)
                 {
@@ -90,53 +86,50 @@ namespace EverythingCanDie
             Plugin.enemies = Resources.FindObjectsOfTypeAll(typeof(EnemyType)).Cast<EnemyType>().Where(e => e != null).ToList();
             Plugin.items = Resources.FindObjectsOfTypeAll(typeof(Item)).Cast<Item>().Where(i => i != null).ToList();
             Plugin.ENEMY_MASK = (1 << 19);
-            Plugin.PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | Plugin.ENEMY_MASK | 2621448; //2621448 = enemy mask
+            Plugin.PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | (Plugin.ENEMY_MASK & 2621448); //2621448 = enemy mask
             Plugin.ENEMY_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers;
 
-            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "BoomableAllMobs")))
+            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "UnimmortalAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
-                "BoomableAllMobs", // The key of the configuration option in the configuration file
+                "UnimmortalAllMobs", // The key of the configuration option in the configuration file
                                              true, // The default value
                                              "Leave On To Customise Mobs Below Or Turn Off To Make All Mobs Unable To Be Affected By This Mod."); // Description
             }
-            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "DefaultHealthAllMobs")))
+            if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "ExplosionEffectAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
-                "DefaultHealthAllMobs", // The key of the configuration option in the configuration file
-                                             false, // The default value
-                                             "If this is set to true then none of the health values will matter and will be default vanilla"); // Description
+                "ExplosionEffectAllMobs", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "If this is set to true then explosion effect stays otherwise when false all explosions on death will not appear."); // Description
             }
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "HealthAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
                 "HealthAllMobs", // The key of the configuration option in the configuration file
                                              true, // The default value
-                                             "If this is set to false it will be set to health values I set otherwise have fun configging"); // Description
+                                             "If this is set to false the enemies health will remain the same otherwise have fun configging."); // Description
             }
             foreach (EnemyType enemy in Plugin.enemies)
             {
                 string mobName = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Boomable")))
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Unimmortal")))
                 {
                     ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Boomable", // The key of the configuration option in the configuration file
+                                             mobName + ".Unimmortal", // The key of the configuration option in the configuration file
                                              true, // The default value
                                              "If true this mob will explode and if immortal it will also be killable."); // Description
                 }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Explodeable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Explodeable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether to spawn an explosion effect(Default on)"); // Description
+                }
                 if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
-                    ConfigEntry<int> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Health", // The key of the configuration option in the configuration file
-                                             3, // The default value
-                                             "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
-                {
-                    foreach (ConfigDefinition def in Plugin.Instance.Config.Keys)
-                    {
-                        CreateHealthConfigEntry(mobName, def);
-                    }
+                    CreateHealthConfigEntry(enemy);
                 }
             }
 
@@ -155,62 +148,57 @@ namespace EverythingCanDie
             }
         }
 
-        public static void PatchSpawnEnemyGameObject(ref NetworkObjectReference __result, Vector3 spawnPosition, float yRot, int enemyNumber, EnemyType enemyType = null)
+        public static bool DoAIIntervalPatch(ref EnemyAI __instance)
         {
-            if (!Plugin.Can("DefaultHealthAllMobs"))
+            if (__instance.GetComponent<Plugin.KilledEnemy>() != null)
             {
-                if (__result.TryGet(out NetworkObject enemy))
-                {
-                    EnemyAI e = enemy.GetComponent<EnemyAI>();
-                    if (e == null)
-                    {
-                        e = enemy.GetComponent<EnemyAICollisionDetect>().mainScript;
-                    }
-                    if (e != null && e.IsOwner)
-                    {
-                        if (Plugin.CanMob("BoomableAllMobs", ".Boomable", e.enemyType.enemyName))
-                        {
-                            e.enemyHP = Plugin.GetInt(".Health", e.enemyType.enemyName);
-                        }
-                        else
-                        {
-                            if (e.enemyType.canDie)
-                            {
-                                e.enemyHP = Plugin.GetInt(".Health", e.enemyType.enemyName);
-                            }
-                        }
-                    }
-                }
+                return false;
             }
+            return true;
+        }
+
+        public static bool OnCollideWithPlayerPatch(ref EnemyAI __instance, Collider other)
+        {
+            if (__instance.GetComponent<Plugin.KilledEnemy>() != null)
+            {
+                return false;
+            }
+            return true;
         }
 
         public static void KillEnemyPatch(ref EnemyAI __instance, bool overrideDestroy = false)
         {
-            if (!__instance.isEnemyDead && __instance.IsOwner) 
+            if (!__instance.isEnemyDead && __instance.IsOwner)
             {
-                if (Plugin.CanMob("BoomableAllMobs", ".Boomable", __instance.enemyType.enemyName))
+                if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", __instance.enemyType.enemyName))
                 {
                     if (__instance is NutcrackerEnemyAI)
                     {
                         NutcrackerEnemyAI ai = (NutcrackerEnemyAI) __instance;
-                        ai.StartCoroutine(DelayedItemDrop(0.5f, ai));
+                        DropItem(ai.transform.position, ai.gunPrefab, ai.gun.scrapValue, RoundManager.Instance);
+                        ai.gunPrefab = null;
                     }
                     Plugin.Log.LogInfo($"Exploding {__instance.name}");
                     __instance.enemyType.canDie = true;
                     var enemyPos = __instance.transform.position;
-                    Object.Instantiate(Plugin.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
-                    RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
-                    HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                    if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", __instance.enemyType.enemyName))
+                    {
+                        Object.Instantiate(Plugin.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
+                        RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+
+                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                    }
+                    __instance.gameObject.AddComponent<Plugin.KilledEnemy>();
+                    __instance.isEnemyDead = true;
                 }
             }
         }
 
-        public static void HitEnemyLocalPatch(int force, Vector3 hitDirection, PlayerControllerB playerWhoHit,
-            bool playHitSFX, EnemyAI __instance)
+        public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
         {
-            if (!__instance.isEnemyDead && __instance.IsOwner)
+            if (!__instance.isEnemyDead)
             {
-                if (Plugin.CanMob("BoomableAllMobs", ".Boomable", __instance.enemyType.enemyName))
+                if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", __instance.enemyType.enemyName))
                 {
                     Plugin.Log.LogInfo(
                     $"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP - force}, canDie: {__instance.enemyType.canDie}");
@@ -222,7 +210,7 @@ namespace EverythingCanDie
                     if (__instance.enemyHP <= 0)
                     {
                         Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
-                        __instance.KillEnemyOnOwnerClient(true);
+                        __instance.KillEnemyOnOwnerClient();
                     }
                 }
             }
@@ -234,151 +222,179 @@ namespace EverythingCanDie
             return false;
         }
 
-        public static void CreateHealthConfigEntry(string mobName, ConfigDefinition originalDefinition = null)
+        static void DropItem(Vector3 position, GameObject itemPrefab, int scrapValue, RoundManager instance)
         {
-            if (!Plugin.Can("DefaultHealthAllMobs"))
+            Transform scrapContainer = instance.spawnedScrapContainer;
+            position += new Vector3(UnityEngine.Random.Range(-0.8f, 0.8f), 0f, UnityEngine.Random.Range(-0.8f, 0.8f));
+            GameObject obj = UnityEngine.Object.Instantiate(itemPrefab, position, Quaternion.identity, scrapContainer);
+            GrabbableObject component = obj.GetComponent<GrabbableObject>();
+            component.transform.rotation = Quaternion.Euler(component.itemProperties.restingRotation);
+            component.fallTime = 0f;
+            int valueOfScrap = scrapValue;
+            if (instance.scrapValueMultiplier > 1)
             {
-                if (!Plugin.Can("HealthAllMobs"))
+                valueOfScrap = (int)(valueOfScrap * instance.scrapValueMultiplier);
+            }
+            component.itemProperties.isScrap = true;
+            component.SetScrapValue(valueOfScrap);
+            NetworkObject net = obj.GetComponent<NetworkObject>();
+            net.Spawn();
+            instance.SyncScrapValuesClientRpc(new List<NetworkObjectReference>() { net }.ToArray(), new List<int>() { valueOfScrap }.ToArray());
+        }
+
+        public static void CreateHealthConfigEntry(EnemyType mob, ConfigDefinition originalDefinition = null)
+        {
+            string mobName = Plugin.RemoveInvalidCharacters(mob.enemyName).ToUpper();
+            if (originalDefinition == null)
+            {
+                ConfigEntry<int> tempEntry;
+                if (mobName.Equals("BLOB"))
                 {
-                    if (originalDefinition == null)
-                    {
-                        ConfigEntry<int> tempEntry;
-                        if (mobName.Equals("BLOB"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 5, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("CRAWLER"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 5, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("FLOWERMAN"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 7, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("FORESTGIANT"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 11, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("JESTER"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 9, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("MASKED"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 5, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("MOUTHDOG"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 11, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("PUFFER"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 5, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("BUNKERSPIDER"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 5, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("EARTHLEVIATHAN"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 15, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else if (mobName.Equals("SPRING"))
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 10, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                        else
-                        {
-                            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                                 3, // The default value
-                                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                        }
-                    }
-                    else
-                    {
-                        if (mobName.Equals("BLOB"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("5");
-                        }
-                        else if (mobName.Equals("CRAWLER"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("5");
-                        }
-                        else if (mobName.Equals("FLOWERMAN"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
-                        }
-                        else if (mobName.Equals("FORESTGIANT"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("11");
-                        }
-                        else if (mobName.Equals("JESTER"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("9");
-                        }
-                        else if (mobName.Equals("MASKED"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("5");
-                        }
-                        else if (mobName.Equals("MOUTHDOG"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("11");
-                        }
-                        else if (mobName.Equals("PUFFER"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("5");
-                        }
-                        else if (mobName.Equals("BUNKERSPIDER"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("5");
-                        }
-                        else if (mobName.Equals("EARTHLEVIATHAN"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("15");
-                        }
-                        else if (mobName.Equals("SPRING"))
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("10");
-                        }
-                        else
-                        {
-                            Plugin.Instance.Config[originalDefinition].SetSerializedValue("3");
-                        }
-                    }
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         7, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+
+                }
+                else if (mobName.Equals("CRAWLER"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         7, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("FLOWERMAN"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         8, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("FORESTGIANT"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         11, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("JESTER"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         9, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("MASKED"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         7, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("MOUTHDOG"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         11, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("PUFFER"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         7, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("BUNKERSPIDER"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         7, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("EARTHLEVIATHAN"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         15, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else if (mobName.Equals("SPRING"))
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         10, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                else
+                {
+                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                         mobName + ".Health", // The key of the configuration option in the configuration file
+                                         6, // The default value
+                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                }
+                if (Plugin.Can("HealthAllMobs"))
+                {
+                    EnemyAI enemy = mob.enemyPrefab.GetComponent<EnemyAI>();
+                    enemy.enemyHP = tempEntry.Value;
+                    Plugin.Log.LogInfo("Set " + enemy.name + " hp to " + enemy.enemyHP);
+                }
+            }
+            else
+            {
+                if (mobName.Equals("BLOB"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
+                }
+                else if (mobName.Equals("CRAWLER"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("8");
+                }
+                else if (mobName.Equals("FLOWERMAN"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("9");
+                }
+                else if (mobName.Equals("FORESTGIANT"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("11");
+                }
+                else if (mobName.Equals("JESTER"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("9");
+                }
+                else if (mobName.Equals("MASKED"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
+                }
+                else if (mobName.Equals("MOUTHDOG"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("11");
+                }
+                else if (mobName.Equals("PUFFER"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
+                }
+                else if (mobName.Equals("BUNKERSPIDER"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
+                }
+                else if (mobName.Equals("EARTHLEVIATHAN"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("15");
+                }
+                else if (mobName.Equals("SPRING"))
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("10");
+                }
+                else
+                {
+                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("6");
+                }
+                if (Plugin.Can("HealthAllMobs"))
+                {
+                    EnemyAI enemy = mob.enemyPrefab.GetComponent<EnemyAI>();
+                    enemy.enemyHP = int.Parse(Plugin.Instance.Config[originalDefinition].BoxedValue.ToString());
+                    Plugin.Log.LogInfo("Set " + enemy.name + " hp to " + enemy.enemyHP);
                 }
             }
         }
@@ -413,7 +429,7 @@ namespace EverythingCanDie
             // generate pellet vectors (done separately to minimise time random state is modified)
             var vectorList = new Vector3[Plugin.numTightPellets + Plugin.numLoosePellets];
             var oldRandomState = UnityEngine.Random.state;
-            UnityEngine.Random.InitState(Plugin.ShotgunRandom.Next());
+            UnityEngine.Random.InitState(UnityEngine.Random.Range(0, int.MaxValue));
             for (int i = 0; i < Plugin.numTightPellets + Plugin.numLoosePellets; i++)
             {
                 float variance = (i < Plugin.numTightPellets) ? Plugin.tightPelletAngle : Plugin.loosePelletAngle;
@@ -491,109 +507,59 @@ namespace EverythingCanDie
                         break; // wall or other obstruction
                     }
                 }
-                //VisualiseShot(shotgunPosition, end);
+                Plugin.VisualiseShot(shotgunPosition, end);
             }
 
             // deal damage all at once - prevents piercing alive and reduces damage calls
-            targets.ForEach(t => {
-                if (t != null)
+            if (targets.Any())
+            {
+                targets.ForEach(t =>
                 {
-                    if (t.GetComponent<PlayerControllerB>() != null)
+                    if (t != null)
                     {
-                        PlayerControllerB player = t.GetComponent<PlayerControllerB>();
-                        // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
-                        int damage = 20;
-                        player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
-                    }
-                    else if (t.GetComponent<EnemyAICollisionDetect>() != null)
-                    {
-                        EnemyAICollisionDetect enemy = t.GetComponent<EnemyAICollisionDetect>();
-                        int damage = 1;
-                        if (!enemy.mainScript.isEnemyDead)
+                        if (t.GetComponent<PlayerControllerB>() != null)
                         {
-                            if (Plugin.CanMob("BoomableAllMobs", ".Boomable", enemy.mainScript.enemyType.enemyName))
-                            {
-                                if (enemy.mainScript.creatureAnimator != null)
-                                {
-                                    enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                                }
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {enemy.mainScript.enemyType.enemyName}, health: {enemy.mainScript.enemyHP - damage}, canDie: {enemy.mainScript.enemyType.canDie}");
-                                enemy.mainScript.enemyHP -= damage;
-                                if (enemy.mainScript.enemyHP <= 0 && enemy.mainScript.IsOwner)
-                                {
-                                    enemy.mainScript.KillEnemyOnOwnerClient(true);
-                                }
-                            }
-                            else
-                            {
-                                enemy.mainScript.HitEnemyOnLocalClient(damage);
-                            }
-                        }
-                    }
-                    else if (t.GetComponent<EnemyAI>() != null)
-                    {
-                        EnemyAI enemy = t.GetComponent<EnemyAI>();
-                        int damage = 1;
-                        if (Plugin.CanMob("BoomableAllMobs", ".Boomable", enemy.enemyType.enemyName))
-                        {
-                            if (enemy.creatureAnimator != null)
-                            {
-                                enemy.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                            }
-                            enemy.enemyHP -= damage;
-                            Plugin.Log.LogInfo(
-                            $"Enemy Hit: {enemy.enemyType.enemyName}, health: {enemy.enemyHP - damage}, canDie: {enemy.enemyType.canDie}");
-                            if (enemy.enemyHP <= 0 && enemy.IsOwner)
-                            {
-                                enemy.KillEnemyOnOwnerClient(true);
-                            }
-                        }
-                        else
-                        {
-                            enemy.HitEnemyOnLocalClient(damage);
-                        }
-                    }
-                    else if (t.GetComponent<IHittable>() != null)
-                    {
-                        IHittable hit = t.GetComponent<IHittable>();
-                        if (hit is EnemyAICollisionDetect)
-                        {
-                            EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
-                            int damage = 1;
-                            if (Plugin.CanMob("BoomableAllMobs", ".Boomable", enemy.mainScript.enemyType.enemyName))
-                            {
-                                if (enemy.mainScript.creatureAnimator != null)
-                                {
-                                    enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                                }
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {enemy.mainScript.enemyType.enemyName}, health: {enemy.mainScript.enemyHP - damage}, canDie: {enemy.mainScript.enemyType.canDie}");
-                                enemy.mainScript.enemyHP -= damage;
-                                if (enemy.mainScript.enemyHP <= 0 && enemy.mainScript.IsOwner)
-                                {
-                                    enemy.mainScript.KillEnemyOnOwnerClient(true);
-                                }
-                            }
-                            else
-                            {
-                                enemy.mainScript.HitEnemyOnLocalClient(damage);
-                            }
-                        }
-                        else if (hit is PlayerControllerB)
-                        {
-                            PlayerControllerB player = (PlayerControllerB)hit;
+                            PlayerControllerB player = t.GetComponent<PlayerControllerB>();
                             // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
-                            int damage = 33;
+                            int damage = 20;
                             player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
                         }
-                        else
+                        else if (t.GetComponent<EnemyAICollisionDetect>() != null)
                         {
-                            hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
+                            EnemyAICollisionDetect enemy = t.GetComponent<EnemyAICollisionDetect>();
+                            int damage = 1;
+                            enemy.mainScript.HitEnemyOnLocalClient(damage);
+                        }
+                        else if (t.GetComponent<EnemyAI>() != null)
+                        {
+                            EnemyAI enemy = t.GetComponent<EnemyAI>();
+                            int damage = 1;
+                            enemy.HitEnemyOnLocalClient(damage);
+                        }
+                        else if (t.GetComponent<IHittable>() != null)
+                        {
+                            IHittable hit = t.GetComponent<IHittable>();
+                            if (hit is EnemyAICollisionDetect)
+                            {
+                                EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
+                                int damage = 1;
+                                enemy.mainScript.HitEnemyOnLocalClient(damage);
+                            }
+                            else if (hit is PlayerControllerB)
+                            {
+                                PlayerControllerB player = (PlayerControllerB)hit;
+                                // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
+                                int damage = 33;
+                                player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
+                            }
+                            else
+                            {
+                                hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
 
             ray = new Ray(shotgunPosition, shotgunForward);
             if (Physics.Raycast(ray, out RaycastHit hitInfo, Plugin.range, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))
@@ -601,18 +567,6 @@ namespace EverythingCanDie
                 gun.gunBulletsRicochetAudio.transform.position = ray.GetPoint(hitInfo.distance - 0.5f);
                 gun.gunBulletsRicochetAudio.Play();
             }
-        }
-
-        public static System.Collections.IEnumerator DelayedItemDrop(float timeTilDrop, NutcrackerEnemyAI enemy)
-        {
-            Transform enemyTransform = enemy.transform;
-            Vector3 pos = enemyTransform.position;
-            if (Physics.SphereCast(pos, 3, enemyTransform.up, out RaycastHit hit))
-            {
-
-            }
-            yield return new WaitForSeconds(timeTilDrop);
-            enemy.DropGunServerRpc(pos);
         }
 
         public static System.Collections.IEnumerator DelayedEarsRinging(float effectSeverity)

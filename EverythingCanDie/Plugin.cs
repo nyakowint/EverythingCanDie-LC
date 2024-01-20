@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace EverythingCanDie
@@ -34,10 +35,9 @@ namespace EverythingCanDie
         public static int PLAYER_HIT_MASK; //2621448 = enemy mask
         public static int ENEMY_HIT_MASK;
 
-        public static System.Random ShotgunRandom = new System.Random(0);
-        public static int numTightPellets = 3;
+        public static int numTightPellets = 2;
         public static float tightPelletAngle = 2.5f;
-        public static int numLoosePellets = 7;
+        public static int numLoosePellets = 3;
         public static float loosePelletAngle = 10f;
 
         private void Awake()
@@ -51,9 +51,11 @@ namespace EverythingCanDie
             Log = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.Guid);
             CreateHarmonyPatch(Harmony, typeof(RoundManager), "Start", null, typeof(Patches), nameof(Patches.RoundManagerPatch), false);
             CreateHarmonyPatch(Harmony, typeof(StartOfRound), "Start", null, typeof(Patches), nameof(Patches.StartOfRoundPatch), false);
-            CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
+            //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.DoAIInterval), null, typeof(Patches), nameof(Patches.DoAIIntervalPatch), true);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithPlayer), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithPlayerPatch), true);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient), new []{ typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), true);
-            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), true);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             Logger.LogInfo(":]");
         }
@@ -180,6 +182,14 @@ namespace EverythingCanDie
             line.start = start;
             line.end = end;
             line.Prep();
+        }
+
+        public class KilledEnemy : NetworkBehaviour
+        {
+            void Awake()
+            {
+                Plugin.Log.LogInfo("Killed!");
+            }
         }
 
         public class FadeOutLine : MonoBehaviour

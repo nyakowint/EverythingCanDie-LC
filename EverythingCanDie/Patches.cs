@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Unity.Netcode;
+using System.Reflection;
 
 // ReSharper disable InconsistentNaming
 namespace EverythingCanDie
@@ -172,12 +173,6 @@ namespace EverythingCanDie
             {
                 if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", __instance.enemyType.enemyName))
                 {
-                    if (__instance is NutcrackerEnemyAI)
-                    {
-                        NutcrackerEnemyAI ai = (NutcrackerEnemyAI) __instance;
-                        DropItem(ai.transform.position, ai.gunPrefab, ai.gun.scrapValue, RoundManager.Instance);
-                        ai.gunPrefab = null;
-                    }
                     Plugin.Log.LogInfo($"Exploding {__instance.name}");
                     __instance.enemyType.canDie = true;
                     var enemyPos = __instance.transform.position;
@@ -189,7 +184,59 @@ namespace EverythingCanDie
                         HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
                     }
                     __instance.gameObject.AddComponent<Plugin.KilledEnemy>();
+                    ScanNodeProperties componentInChildren = __instance.gameObject.GetComponentInChildren<ScanNodeProperties>();
+                    if (componentInChildren != null && (bool)componentInChildren.gameObject.GetComponent<Collider>())
+                    {
+                        componentInChildren.gameObject.GetComponent<Collider>().enabled = false;
+                    }
                     __instance.isEnemyDead = true;
+                    if (__instance.creatureVoice != null)
+                    {
+                        if (__instance.dieSFX != null)
+                        {
+                            __instance.creatureVoice.PlayOneShot(__instance.dieSFX);
+                        }
+                    }
+                    if (__instance is NutcrackerEnemyAI)
+                    {
+                        NutcrackerEnemyAI ai = (NutcrackerEnemyAI)__instance;
+                        DropItem(enemyPos, ai.gunPrefab, ai.gun.scrapValue, RoundManager.Instance);
+                        ai.targetTorsoDegrees = 0;
+                        ai.StopInspection();
+                        System.Type nut = typeof(EnemyAI);
+                        MethodInfo sReload_method = nut.GetMethod("StopReloading", BindingFlags.NonPublic | BindingFlags.Instance);
+                        sReload_method.Invoke(__instance, null);
+                        Vector3 position = enemyPos + Vector3.up * 0.6f;
+                        DropItem(position, ai.shotgunShellPrefab, 20, RoundManager.Instance);
+                        DropItem(position, ai.shotgunShellPrefab, 20, RoundManager.Instance);
+                        ai.creatureVoice.Stop();
+                        ai.torsoTurnAudio.Stop();
+                        ai.gunPrefab.SetActive(false);
+                        ai.gun.gameObject.SetActive(false);
+                    }
+                    try
+                    {
+                        if (__instance.creatureAnimator != null)
+                        {
+                            __instance.creatureAnimator.SetBool("Stunned", value: false);
+                            __instance.creatureAnimator.SetBool("stunned", value: false);
+                            __instance.creatureAnimator.SetBool("stun", value: false);
+                            __instance.creatureAnimator.SetTrigger("KillEnemy");
+                            __instance.creatureAnimator.SetBool("Dead", value: true);
+                        }
+                    }
+                    catch (Exception arg)
+                    {
+                        Debug.LogError($"enemy did not have bool in animator in KillEnemy, error returned; {arg}");
+                    }
+                    __instance.CancelSpecialAnimationWithPlayer();
+                    System.Type typ = typeof(EnemyAI);
+                    MethodInfo target_method = typ.GetMethod("SubtractFromPowerLevel", BindingFlags.NonPublic | BindingFlags.Instance);
+                    target_method.Invoke(__instance, null);
+                    if (__instance.agent != null)
+                    {
+                        __instance.agent.enabled = false;
+                    }
                 }
             }
         }
@@ -239,7 +286,7 @@ namespace EverythingCanDie
             component.SetScrapValue(valueOfScrap);
             NetworkObject net = obj.GetComponent<NetworkObject>();
             net.Spawn();
-            instance.SyncScrapValuesClientRpc(new List<NetworkObjectReference>() { net }.ToArray(), new List<int>() { valueOfScrap }.ToArray());
+            instance.totalScrapValueInLevel += valueOfScrap;
         }
 
         public static void CreateHealthConfigEntry(EnemyType mob, ConfigDefinition originalDefinition = null)

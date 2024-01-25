@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using Unity.Netcode;
+using System.Reflection;
 
 // ReSharper disable InconsistentNaming
 
@@ -200,6 +201,7 @@ namespace EverythingCanDie
             {
                 return false;
             }
+            return true;
         }
 
         public static void KillEnemyPatch(ref EnemyAI __instance, bool destroy = false)
@@ -239,15 +241,12 @@ namespace EverythingCanDie
                         if (__instance is NutcrackerEnemyAI)
                         {
                             NutcrackerEnemyAI ai = (NutcrackerEnemyAI)__instance;
-                            DropItem(enemyPos, ai.gunPrefab, ai.gun.scrapValue, RoundManager.Instance);
                             ai.targetTorsoDegrees = 0;
                             ai.StopInspection();
                             System.Type nut = typeof(EnemyAI);
                             MethodInfo sReload_method = nut.GetMethod("StopReloading", BindingFlags.NonPublic | BindingFlags.Instance);
                             sReload_method.Invoke(__instance, null);
                             Vector3 position = enemyPos + Vector3.up * 0.6f;
-                            DropItem(position, ai.shotgunShellPrefab, 20, RoundManager.Instance);
-                            DropItem(position, ai.shotgunShellPrefab, 20, RoundManager.Instance);
                             ai.creatureVoice.Stop();
                             ai.torsoTurnAudio.Stop();
                             ai.gunPrefab.SetActive(false);

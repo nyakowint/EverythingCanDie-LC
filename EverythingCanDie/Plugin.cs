@@ -36,10 +36,9 @@ namespace EverythingCanDie
         public static int PLAYER_HIT_MASK; //2621448 = enemy mask
         public static int ENEMY_HIT_MASK;
 
-        public static System.Random ShotgunRandom = new System.Random(0);
-        public static int numTightPellets = 3;
+        public static int numTightPellets = 2;
         public static float tightPelletAngle = 2.5f;
-        public static int numLoosePellets = 7;
+        public static int numLoosePellets = 3;
         public static float loosePelletAngle = 10f;
 
         public static bool hasEvaisaRPG = false;

@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.Audio;
 
 namespace EverythingCanDie
 {
@@ -61,9 +61,7 @@ namespace EverythingCanDie
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithPlayer), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithPlayerPatch), true);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemy), new []{ typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), false);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
-            CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
-            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient), new []{ typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), true);
-            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), true);
+            //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             if (FindType("LethalThings.RocketLauncher") != null)
             {
@@ -120,12 +118,7 @@ namespace EverythingCanDie
             }
         }
 
-        public static string RemoveWhitespaces(string source)
-        {
-            return string.Join("", source.Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
-        }
-
-        public static string RemoveSpecialCharacters(string source)
+        public static string RemoveInvalidCharacters(string source)
         {
             StringBuilder sb = new StringBuilder();
             foreach (char c in source)
@@ -135,12 +128,7 @@ namespace EverythingCanDie
                     sb.Append(c);
                 }
             }
-            return sb.ToString();
-        }
-
-        public static string RemoveInvalidCharacters(string source)
-        {
-            return RemoveWhitespaces(RemoveSpecialCharacters(source));
+            return string.Join("", sb.ToString().Split(default(string[]), StringSplitOptions.RemoveEmptyEntries));
         }
 
         public static bool Can(string identifier)
@@ -150,22 +138,6 @@ namespace EverythingCanDie
                 return true;
             }
             return false;
-        }
-
-        public static int GetInt(string identifier, string mobName)
-        {
-            string mob = RemoveInvalidCharacters(mobName).ToUpper();
-            foreach (ConfigDefinition entry in Plugin.Instance.Config.Keys)
-            {
-                if (RemoveInvalidCharacters(entry.Key.ToUpper()).Equals(RemoveInvalidCharacters(mob + identifier.ToUpper())))
-                {
-                    if (int.TryParse(Plugin.Instance.Config[entry].BoxedValue.ToString().ToUpper(), out int result))
-                    {
-                        return result;
-                    }
-                }
-            }
-            return 3;
         }
 
         public static bool CanMob(string parentIdentifier, string identifier, string mobName)
@@ -198,6 +170,14 @@ namespace EverythingCanDie
             line.start = start;
             line.end = end;
             line.Prep();
+        }
+
+        public class KilledEnemy : NetworkBehaviour
+        {
+            void Awake()
+            {
+                Plugin.Log.LogInfo("Killed!");
+            }
         }
 
         public class FadeOutLine : MonoBehaviour

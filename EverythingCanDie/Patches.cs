@@ -30,9 +30,9 @@ namespace EverythingCanDie
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "DefaultHealthAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
-                "DefaultHealthAllMobs", // The key of the configuration option in the configuration file
-                                             false, // The default value
-                                             "If this is set to true then none of the health values will matter and will be default vanilla"); // Description
+                "ExplosionEffectAllMobs", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "If this is set to true then explosion effect stays and removes the body otherwise when false all explosions on death will not appear and the body will appear."); // Description
             }
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "HealthAllMobs")))
             {
@@ -53,10 +53,32 @@ namespace EverythingCanDie
                 }
                 if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
-                    ConfigEntry<int> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Health", // The key of the configuration option in the configuration file
-                                             3, // The default value
-                                             "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Explodeable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether to spawn an explosion effect(Default on)"); // Description
+                }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Hittable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Hittable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether this mob is hittable with things like shovels." +
+                                             "(WARNING: If it is a modded item that happens to shoot then this might effect those items too)"); // Description
+                }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Shootable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Shootable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether this mob is shootable with things like shotguns.(WARNING: Only works for items that use the ShotgunItem as its parent)"); // Description
+                }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Rocketable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Rocketable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether this mob is able to be shot with rockets from LethalThings rocket launcher(optional if LethalThings is installed)."); // Description
                 }
                 else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
@@ -103,9 +125,9 @@ namespace EverythingCanDie
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "DefaultHealthAllMobs")))
             {
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
-                "DefaultHealthAllMobs", // The key of the configuration option in the configuration file
-                                             false, // The default value
-                                             "If this is set to true then none of the health values will matter and will be default vanilla"); // Description
+                "ExplosionEffectAllMobs", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "If this is set to true then explosion effect stays and removes the body otherwise when false all explosions on death will not appear and the body will appear."); // Description
             }
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "HealthAllMobs")))
             {
@@ -126,12 +148,12 @@ namespace EverythingCanDie
                 }
                 if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
-                    ConfigEntry<int> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Health", // The key of the configuration option in the configuration file
-                                             3, // The default value
-                                             "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Explodeable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether to spawn an explosion effect(Default on)"); // Description
                 }
-                else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
                     foreach (ConfigDefinition def in Plugin.Instance.Config.Keys)
                     {
@@ -155,62 +177,115 @@ namespace EverythingCanDie
             }
         }
 
-        public static void PatchSpawnEnemyGameObject(ref NetworkObjectReference __result, Vector3 spawnPosition, float yRot, int enemyNumber, EnemyType enemyType = null)
+        public static bool DoAIIntervalPatch(ref EnemyAI __instance)
         {
-            if (!Plugin.Can("DefaultHealthAllMobs"))
+            if (__instance == null)
             {
-                if (__result.TryGet(out NetworkObject enemy))
+                return false;
+            }
+            if (__instance.GetComponent<Plugin.KilledEnemy>() != null)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static bool OnCollideWithPlayerPatch(ref EnemyAI __instance, Collider other)
+        {
+            if (__instance == null)
+            {
+                return false;
+            }
+            if (__instance.GetComponent<Plugin.KilledEnemy>() != null)
+            {
+                return false;
+            }
+        }
+
+        public static void KillEnemyPatch(ref EnemyAI __instance, bool destroy = false)
+        {
+            if (!(__instance == null))
+            {
+                if (!__instance.isEnemyDead && __instance.IsOwner)
                 {
-                    EnemyAI e = enemy.GetComponent<EnemyAI>();
-                    if (e == null)
+                    EnemyType type = __instance.enemyType;
+                    string name = Plugin.RemoveInvalidCharacters(type.enemyName);
+                    if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                     {
-                        e = enemy.GetComponent<EnemyAICollisionDetect>().mainScript;
-                    }
-                    if (e != null && e.IsOwner)
-                    {
-                        if (Plugin.CanMob("BoomableAllMobs", ".Boomable", e.enemyType.enemyName))
+                        Plugin.Log.LogInfo($"Exploding {name}");
+                        __instance.enemyType.canDie = true;
+                        var enemyPos = __instance.transform.position;
+                        if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
                         {
-                            e.enemyHP = Plugin.GetInt(".Health", e.enemyType.enemyName);
+                            Object.Instantiate(Plugin.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
+                            RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+
+                            HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
                         }
-                        else
+                        __instance.isEnemyDead = true;
+                        __instance.gameObject.AddComponent<Plugin.KilledEnemy>();
+                        ScanNodeProperties componentInChildren = __instance.gameObject.GetComponentInChildren<ScanNodeProperties>();
+                        if (componentInChildren != null && (bool)componentInChildren.gameObject.GetComponent<Collider>())
                         {
-                            if (e.enemyType.canDie)
+                            componentInChildren.gameObject.GetComponent<Collider>().enabled = false;
+                        }
+                        if (__instance.creatureVoice != null)
+                        {
+                            if (__instance.dieSFX != null)
                             {
-                                e.enemyHP = Plugin.GetInt(".Health", e.enemyType.enemyName);
+                                __instance.creatureVoice.PlayOneShot(__instance.dieSFX);
                             }
                         }
+                        if (__instance is NutcrackerEnemyAI)
+                        {
+                            NutcrackerEnemyAI ai = (NutcrackerEnemyAI)__instance;
+                            DropItem(enemyPos, ai.gunPrefab, ai.gun.scrapValue, RoundManager.Instance);
+                            ai.targetTorsoDegrees = 0;
+                            ai.StopInspection();
+                            System.Type nut = typeof(EnemyAI);
+                            MethodInfo sReload_method = nut.GetMethod("StopReloading", BindingFlags.NonPublic | BindingFlags.Instance);
+                            sReload_method.Invoke(__instance, null);
+                            Vector3 position = enemyPos + Vector3.up * 0.6f;
+                            DropItem(position, ai.shotgunShellPrefab, 20, RoundManager.Instance);
+                            DropItem(position, ai.shotgunShellPrefab, 20, RoundManager.Instance);
+                            ai.creatureVoice.Stop();
+                            ai.torsoTurnAudio.Stop();
+                            ai.gunPrefab.SetActive(false);
+                            ai.gun.gameObject.SetActive(false);
+                        }
+                        try
+                        {
+                            if (__instance.creatureAnimator != null)
+                            {
+                                __instance.creatureAnimator.SetBool("Stunned", value: false);
+                                __instance.creatureAnimator.SetBool("stunned", value: false);
+                                __instance.creatureAnimator.SetBool("stun", value: false);
+                                __instance.creatureAnimator.SetTrigger("KillEnemy");
+                                __instance.creatureAnimator.SetBool("Dead", value: true);
+                            }
+                        }
+                        catch (Exception arg)
+                        {
+                            Debug.LogError($"enemy did not have bool in animator in KillEnemy, error returned; {arg}");
+                        }
+                        __instance.CancelSpecialAnimationWithPlayer();
+                        System.Type typ = typeof(EnemyAI);
+                        MethodInfo target_method = typ.GetMethod("SubtractFromPowerLevel", BindingFlags.NonPublic | BindingFlags.Instance);
+                        target_method.Invoke(__instance, null);
+                        if (__instance.agent != null)
+                        {
+                            __instance.agent.enabled = false;
+                        }
                     }
                 }
             }
         }
 
-        public static void KillEnemyPatch(ref EnemyAI __instance, bool overrideDestroy = false)
+        public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
         {
-            if (!__instance.isEnemyDead && __instance.IsOwner) 
+            if (!__instance.isEnemyDead)
             {
-                if (Plugin.CanMob("BoomableAllMobs", ".Boomable", __instance.enemyType.enemyName))
-                {
-                    if (__instance is NutcrackerEnemyAI)
-                    {
-                        NutcrackerEnemyAI ai = (NutcrackerEnemyAI) __instance;
-                        ai.StartCoroutine(DelayedItemDrop(0.5f, ai));
-                    }
-                    Plugin.Log.LogInfo($"Exploding {__instance.name}");
-                    __instance.enemyType.canDie = true;
-                    var enemyPos = __instance.transform.position;
-                    Object.Instantiate(Plugin.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
-                    RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
-                    HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
-                }
-            }
-        }
-
-        public static void HitEnemyLocalPatch(int force, Vector3 hitDirection, PlayerControllerB playerWhoHit,
-            bool playHitSFX, EnemyAI __instance)
-        {
-            if (!__instance.isEnemyDead && __instance.IsOwner)
-            {
-                if (Plugin.CanMob("BoomableAllMobs", ".Boomable", __instance.enemyType.enemyName))
+                if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", __instance.enemyType.enemyName))
                 {
                     Plugin.Log.LogInfo(
                     $"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP - force}, canDie: {__instance.enemyType.canDie}");
@@ -222,7 +297,7 @@ namespace EverythingCanDie
                     if (__instance.enemyHP <= 0)
                     {
                         Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
-                        __instance.KillEnemyOnOwnerClient(true);
+                        __instance.KillEnemyOnOwnerClient();
                     }
                 }
             }
@@ -493,107 +568,48 @@ namespace EverythingCanDie
                 }
                 //VisualiseShot(shotgunPosition, end);
             }
-
             // deal damage all at once - prevents piercing alive and reduces damage calls
-            targets.ForEach(t => {
-                if (t != null)
+            targets.RemoveAll(t => t == null);
+            if (targets.Any())
+            {
+                targets.ForEach(t =>
                 {
-                    if (t.GetComponent<PlayerControllerB>() != null)
+                    if (t == null)
                     {
-                        PlayerControllerB player = t.GetComponent<PlayerControllerB>();
-                        // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
-                        int damage = 20;
-                        player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
+                        Plugin.Log.LogInfo("NO!");
                     }
-                    else if (t.GetComponent<EnemyAICollisionDetect>() != null)
+                    else
                     {
-                        EnemyAICollisionDetect enemy = t.GetComponent<EnemyAICollisionDetect>();
-                        int damage = 1;
-                        if (!enemy.mainScript.isEnemyDead)
+                        if (t.GetComponent<EnemyAI>() != null)
                         {
-                            if (Plugin.CanMob("BoomableAllMobs", ".Boomable", enemy.mainScript.enemyType.enemyName))
-                            {
-                                if (enemy.mainScript.creatureAnimator != null)
-                                {
-                                    enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                                }
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {enemy.mainScript.enemyType.enemyName}, health: {enemy.mainScript.enemyHP - damage}, canDie: {enemy.mainScript.enemyType.canDie}");
-                                enemy.mainScript.enemyHP -= damage;
-                                if (enemy.mainScript.enemyHP <= 0 && enemy.mainScript.IsOwner)
-                                {
-                                    enemy.mainScript.KillEnemyOnOwnerClient(true);
-                                }
-                            }
-                            else
-                            {
-                                enemy.mainScript.HitEnemyOnLocalClient(damage);
-                            }
-                        }
-                    }
-                    else if (t.GetComponent<EnemyAI>() != null)
-                    {
-                        EnemyAI enemy = t.GetComponent<EnemyAI>();
-                        int damage = 1;
-                        if (Plugin.CanMob("BoomableAllMobs", ".Boomable", enemy.enemyType.enemyName))
-                        {
-                            if (enemy.creatureAnimator != null)
-                            {
-                                enemy.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                            }
-                            enemy.enemyHP -= damage;
-                            Plugin.Log.LogInfo(
-                            $"Enemy Hit: {enemy.enemyType.enemyName}, health: {enemy.enemyHP - damage}, canDie: {enemy.enemyType.canDie}");
-                            if (enemy.enemyHP <= 0 && enemy.IsOwner)
-                            {
-                                enemy.KillEnemyOnOwnerClient(true);
-                            }
-                        }
-                        else
-                        {
-                            enemy.HitEnemyOnLocalClient(damage);
-                        }
-                    }
-                    else if (t.GetComponent<IHittable>() != null)
-                    {
-                        IHittable hit = t.GetComponent<IHittable>();
-                        if (hit is EnemyAICollisionDetect)
-                        {
-                            EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
+                            EnemyAI enemy = t.GetComponent<EnemyAI>();
                             int damage = 1;
-                            if (Plugin.CanMob("BoomableAllMobs", ".Boomable", enemy.mainScript.enemyType.enemyName))
+                            enemy.HitEnemyOnLocalClient(damage, default, holder);
+                        }
+                        else if (t.GetComponent<IHittable>() != null)
+                        {
+                            IHittable hit = t.GetComponent<IHittable>();
+                            if (hit is EnemyAICollisionDetect)
                             {
-                                if (enemy.mainScript.creatureAnimator != null)
-                                {
-                                    enemy.mainScript.creatureAnimator.SetTrigger(Animator.StringToHash("damage"));
-                                }
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {enemy.mainScript.enemyType.enemyName}, health: {enemy.mainScript.enemyHP - damage}, canDie: {enemy.mainScript.enemyType.canDie}");
-                                enemy.mainScript.enemyHP -= damage;
-                                if (enemy.mainScript.enemyHP <= 0 && enemy.mainScript.IsOwner)
-                                {
-                                    enemy.mainScript.KillEnemyOnOwnerClient(true);
-                                }
+                                EnemyAICollisionDetect enemy = (EnemyAICollisionDetect)hit;
+                                int damage = 1;
+                                enemy.mainScript.HitEnemyOnLocalClient(damage, default, holder);
+                            }
+                            else if (hit is PlayerControllerB)
+                            {
+                                PlayerControllerB player = (PlayerControllerB)hit;
+                                // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
+                                int damage = 18;
+                                player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
                             }
                             else
                             {
-                                enemy.mainScript.HitEnemyOnLocalClient(damage);
+                                hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
                             }
                         }
-                        else if (hit is PlayerControllerB)
-                        {
-                            PlayerControllerB player = (PlayerControllerB)hit;
-                            // grouping player damage also ensures strong hits (3+ pellets) ignore critical damage - 5 is always lethal rather than being critical
-                            int damage = 33;
-                            player.DamagePlayer(damage, true, true, CauseOfDeath.Gunshots, 0, false, shotgunForward);
-                        }
-                        else
-                        {
-                            hit.Hit(1, shotgunForward, gun.playerHeldBy, true);
-                        }
                     }
-                }
-            });
+                });
+            }
 
             ray = new Ray(shotgunPosition, shotgunForward);
             if (Physics.Raycast(ray, out RaycastHit hitInfo, Plugin.range, StartOfRound.Instance.collidersAndRoomMaskAndDefault, QueryTriggerInteraction.Ignore))

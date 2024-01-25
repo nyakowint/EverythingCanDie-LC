@@ -10,6 +10,7 @@
     <RootNamespace>EverythingCanDie</RootNamespace>
     <AssemblyName>EverythingCanDie</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+	<LangVersion>8.0</LangVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
@@ -41,6 +42,9 @@
     </Reference>
     <Reference Include="Assembly-CSharp">
       <HintPath>..\..\..\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="LethalThings">
+      <HintPath>..\..\..\Thunderstore\Data\LethalCompany\profiles\TheFluffsTest\BepInEx\plugins\Evaisa-LethalThings\LethalThings\LethalThings.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Unity.Netcode.Components">

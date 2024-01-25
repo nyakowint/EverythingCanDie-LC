@@ -21,6 +21,7 @@ namespace EverythingCanDie
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
+    [BepInDependency("Evaisa-LethalThings-0.9.4", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance;
@@ -41,6 +42,9 @@ namespace EverythingCanDie
         public static int numLoosePellets = 7;
         public static float loosePelletAngle = 10f;
 
+        public static bool hasEvaisaRPG = false;
+        public static bool hasEvaisaHammer = false;
+
         private void Awake()
         {
             Harmony = new Harmony(PluginInfo.Guid);
@@ -52,10 +56,23 @@ namespace EverythingCanDie
             Log = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.Guid);
             CreateHarmonyPatch(Harmony, typeof(RoundManager), "Start", null, typeof(Patches), nameof(Patches.RoundManagerPatch), false);
             CreateHarmonyPatch(Harmony, typeof(StartOfRound), "Start", null, typeof(Patches), nameof(Patches.StartOfRoundPatch), false);
+            //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.DoAIInterval), null, typeof(Patches), nameof(Patches.DoAIIntervalPatch), true);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithPlayer), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithPlayerPatch), true);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemy), new []{ typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), false);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
             CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemyOnOwnerClient), new []{ typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), true);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), true);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
+            if (FindType("LethalThings.RocketLauncher") != null)
+            {
+                hasEvaisaRPG = true;
+            }
+            if (FindType("LethalThings.ToyHammer") != null)
+            {
+                hasEvaisaHammer = true;
+            }
             Logger.LogInfo(":]");
         }
 

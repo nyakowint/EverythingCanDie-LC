@@ -117,7 +117,7 @@ namespace EverythingCanDie
                 ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // Section Title
                 "UnimmortalAllMobs", // The key of the configuration option in the configuration file
                                              true, // The default value
-                                             "Leave On To Customise Mobs Below Or Turn Off To Make All Mobs Unable To Be Affected By This Mod."); // Description
+                                             "Leave On To Customise Mobs Below Or Turn Off To Make All Mobs Return To Normal(Make Immortal mobs immortal again)."); // Description
             }
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "ExplosionEffectAllMobs")))
             {
@@ -150,12 +150,31 @@ namespace EverythingCanDie
                                              true, // The default value
                                              "The value of whether to spawn an explosion effect(Default on)"); // Description
                 }
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Hittable")))
                 {
-                    foreach (ConfigDefinition def in Plugin.Instance.Config.Keys)
-                    {
-                        CreateHealthConfigEntry(mobName, def);
-                    }
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Hittable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether this mob is hittable with things like shovels." +
+                                             "(WARNING: If it is a modded item that happens to shoot then this might effect those items too)"); // Description
+                }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Shootable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Shootable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether this mob is shootable with things like shotguns.(WARNING: Only works for items that use the ShotgunItem as its parent)"); // Description
+                }
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Rocketable")))
+                {
+                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                             mobName + ".Rocketable", // The key of the configuration option in the configuration file
+                                             true, // The default value
+                                             "The value of whether this mob is able to be shot with rockets from LethalThings rocket launcher(optional if LethalThings is installed)."); // Description
+                }
+                else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
+                {
+                    CreateHealthConfigEntry(enemy);
                 }
             }
 
@@ -207,7 +226,7 @@ namespace EverythingCanDie
                 if (!__instance.isEnemyDead && __instance.IsOwner)
                 {
                     EnemyType type = __instance.enemyType;
-                    string name = Plugin.RemoveInvalidCharacters(type.enemyName);
+                    string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
                     if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                     {
                         Plugin.Log.LogInfo($"Exploding {name}");
@@ -278,21 +297,79 @@ namespace EverythingCanDie
 
         public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
         {
-            if (!__instance.isEnemyDead)
-            {
-                if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", __instance.enemyType.enemyName))
+            if (!(__instance == null)) {
+                if (!__instance.isEnemyDead)
                 {
-                    Plugin.Log.LogInfo(
-                    $"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP - force}, canDie: {__instance.enemyType.canDie}");
-                    if (__instance.creatureAnimator != null)
+                    EnemyType type = __instance.enemyType;
+                    string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
+                    bool canDamage = true;
+                    if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                     {
-                        __instance.creatureAnimator.SetTrigger(Damage);
-                    }
-                    __instance.enemyHP -= force;
-                    if (__instance.enemyHP <= 0)
-                    {
-                        Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
-                        __instance.KillEnemyOnOwnerClient();
+                        GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
+                        type.canDie = true;
+                        if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
+                        {
+                            if (!(held is ShotgunItem))
+                            {
+                                if (Plugin.hasEvaisaRPG)
+                                {
+                                    if (!held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
+                                    {
+                                        canDamage = false;
+                                        Plugin.Log.LogInfo($"Hit Disabled for {name}!");
+                                    }
+                                }
+                                else
+                                {
+                                    canDamage = false;
+                                    Plugin.Log.LogInfo($"Hit Disabled for {name}!");
+                                }
+                            }
+                        }
+                        else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
+                        {
+                            canDamage = false;
+                            Plugin.Log.LogInfo($"Shoot Disabled for {name}!");
+                        }
+                        else if (Plugin.hasEvaisaRPG && !Plugin.Can(name + ".Rocketable"))
+                        {
+                            if (held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
+                            {
+                                canDamage = false;
+                                Plugin.Log.LogInfo($"Rockets Disabled for {name}!");
+                            }
+                        }
+                        if (canDamage)
+                        {
+                            if (__instance.creatureAnimator != null)
+                            {
+                                __instance.creatureAnimator.SetTrigger(Damage);
+                            }
+                            if (__instance.enemyHP - force > 0)
+                            {
+                                __instance.enemyHP -= force;
+                                Plugin.Log.LogInfo(
+                                $"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {__instance.enemyType.canDie}");
+                            }
+                            else
+                            {
+                                __instance.enemyHP = 0;
+                                Plugin.Log.LogInfo(
+                                $"Enemy Hit: {name}, health: {0}, canDie: {__instance.enemyType.canDie}");
+                            }
+                            if (__instance.enemyHP <= 0)
+                            {
+                                Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
+                                if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
+                                {
+                                    __instance.KillEnemyOnOwnerClient(true);
+                                }
+                                else
+                                {
+                                    __instance.KillEnemyOnOwnerClient(type.destroyOnDeath);
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -302,26 +379,6 @@ namespace EverythingCanDie
         {
             ShootGun(__instance, shotgunPosition, shotgunForward);
             return false;
-        }
-
-        static void DropItem(Vector3 position, GameObject itemPrefab, int scrapValue, RoundManager instance)
-        {
-            Transform scrapContainer = instance.spawnedScrapContainer;
-            position += new Vector3(UnityEngine.Random.Range(-0.8f, 0.8f), 0f, UnityEngine.Random.Range(-0.8f, 0.8f));
-            GameObject obj = UnityEngine.Object.Instantiate(itemPrefab, position, Quaternion.identity, scrapContainer);
-            GrabbableObject component = obj.GetComponent<GrabbableObject>();
-            component.transform.rotation = Quaternion.Euler(component.itemProperties.restingRotation);
-            component.fallTime = 0f;
-            int valueOfScrap = scrapValue;
-            if (instance.scrapValueMultiplier > 1)
-            {
-                valueOfScrap = (int)(valueOfScrap * instance.scrapValueMultiplier);
-            }
-            component.itemProperties.isScrap = true;
-            component.SetScrapValue(valueOfScrap);
-            NetworkObject net = obj.GetComponent<NetworkObject>();
-            net.Spawn();
-            instance.totalScrapValueInLevel += valueOfScrap;
         }
 
         public static void CreateHealthConfigEntry(EnemyType mob, ConfigDefinition originalDefinition = null)

@@ -349,13 +349,13 @@ namespace EverythingCanDie
                             {
                                 __instance.enemyHP -= force;
                                 Plugin.Log.LogInfo(
-                                $"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {__instance.enemyType.canDie}");
+                                $"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {type.canDie}");
                             }
                             else
                             {
                                 __instance.enemyHP = 0;
                                 Plugin.Log.LogInfo(
-                                $"Enemy Hit: {name}, health: {0}, canDie: {__instance.enemyType.canDie}");
+                                $"Enemy Hit: {name}, health: {0}, canDie: {type.canDie}");
                             }
                             if (__instance.enemyHP <= 0)
                             {

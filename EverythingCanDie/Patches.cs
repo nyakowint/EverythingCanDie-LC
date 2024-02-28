@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using Unity.Netcode;
 using System.Reflection;
 
 // ReSharper disable InconsistentNaming
@@ -305,38 +304,41 @@ namespace EverythingCanDie
                     bool canDamage = true;
                     if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                     {
-                        GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
-                        type.canDie = true;
-                        if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
+                        if (playerWhoHit != null)
                         {
-                            if (!(held is ShotgunItem))
+                            GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
+                            type.canDie = true;
+                            if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
                             {
-                                if (Plugin.hasEvaisaRPG)
+                                if (!(held is ShotgunItem))
                                 {
-                                    if (!held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
+                                    if (Plugin.hasEvaisaRPG)
+                                    {
+                                        if (!held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
+                                        {
+                                            canDamage = false;
+                                            Plugin.Log.LogInfo($"Hit Disabled for {name}!");
+                                        }
+                                    }
+                                    else
                                     {
                                         canDamage = false;
                                         Plugin.Log.LogInfo($"Hit Disabled for {name}!");
                                     }
                                 }
-                                else
-                                {
-                                    canDamage = false;
-                                    Plugin.Log.LogInfo($"Hit Disabled for {name}!");
-                                }
                             }
-                        }
-                        else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
-                        {
-                            canDamage = false;
-                            Plugin.Log.LogInfo($"Shoot Disabled for {name}!");
-                        }
-                        else if (Plugin.hasEvaisaRPG && !Plugin.Can(name + ".Rocketable"))
-                        {
-                            if (held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
+                            else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
                             {
                                 canDamage = false;
-                                Plugin.Log.LogInfo($"Rockets Disabled for {name}!");
+                                Plugin.Log.LogInfo($"Shoot Disabled for {name}!");
+                            }
+                            else if (Plugin.hasEvaisaRPG && !Plugin.Can(name + ".Rocketable"))
+                            {
+                                if (held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
+                                {
+                                    canDamage = false;
+                                    Plugin.Log.LogInfo($"Rockets Disabled for {name}!");
+                                }
                             }
                         }
                         if (canDamage)
@@ -614,17 +616,24 @@ namespace EverythingCanDie
                     GameObject obj = hits[j].transform.gameObject;
                     if (obj.TryGetComponent(out IHittable hittable))
                     {
-                        if (ReferenceEquals(hittable, gun.playerHeldBy)) continue; // self hit
+                        if (ReferenceEquals(hittable, gun.playerHeldBy)) 
+                            continue; // self hit
                         EnemyAI ai = null;
-                        if (hittable is EnemyAICollisionDetect detect) ai = detect.mainScript;
+                        if (hittable is EnemyAICollisionDetect detect)
+                            ai = detect.mainScript;
                         if (ai != null)
                         {
-                            if (!playerFired) continue; // enemy hit enemy
-                            if (ai.isEnemyDead || ai.enemyHP <= 0 || !ai.enemyType.canDie) continue; // skip dead things
+                            if (!playerFired)
+                                continue; // enemy hit enemy
+                            if (ai.isEnemyDead || ai.enemyHP <= 0 || !ai.enemyType.canDie) 
+                                continue; // skip dead things
                         }
-                        if (hittable is PlayerControllerB) targets.Add(obj);
-                        else if (ai != null) targets.Add(obj);
-                        else if (playerFired) targets.Add(obj);
+                        if (hittable is PlayerControllerB) 
+                            targets.Add(obj);
+                        else if (ai != null) 
+                            targets.Add(obj);
+                        else if (playerFired) 
+                            targets.Add(obj);
                         else continue; // enemy hit something else (webs?)
                         end = hits[j].point;
                         break;

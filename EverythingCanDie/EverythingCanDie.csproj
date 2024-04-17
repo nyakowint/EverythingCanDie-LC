@@ -45,7 +45,7 @@
       <HintPath>..\..\..\SteamLibrary\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="LethalThings">
-      <HintPath>..\..\..\Thunderstore\Data\LethalCompany\profiles\TheFluffsTest\BepInEx\plugins\Evaisa-LethalThings\LethalThings\LethalThings.dll</HintPath>
+      <HintPath>..\LethalThings.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="Unity.Netcode.Components, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">

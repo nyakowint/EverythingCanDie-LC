@@ -294,7 +294,7 @@ namespace EverythingCanDie
             }
         }
 
-        public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false)
+        public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
             if (!(__instance == null)) {
                 if (!__instance.isEnemyDead)

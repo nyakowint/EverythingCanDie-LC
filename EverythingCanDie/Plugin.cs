@@ -16,12 +16,12 @@ namespace EverythingCanDie
     internal static class PluginInfo
     {
         public const string Guid = "nwnt.EverythingCanDie";
-        public const string Name = "Everything Can Die";
-        public const string Version = "1.2.0";
+        public const string Name = "EverythingCanDie";
+        public const string Version = "1.2.11";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
-    [BepInDependency("Evaisa-LethalThings-0.9.4", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("Evaisa-LethalThings-0.10.3", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance;
@@ -52,7 +52,7 @@ namespace EverythingCanDie
                 Instance = this;
             }
             Harmony.PatchAll(typeof(Plugin));
-            Log = BepInEx.Logging.Logger.CreateLogSource(PluginInfo.Guid);
+            Log = Logger;
             CreateHarmonyPatch(Harmony, typeof(RoundManager), "Start", null, typeof(Patches), nameof(Patches.RoundManagerPatch), false);
             CreateHarmonyPatch(Harmony, typeof(StartOfRound), "Start", null, typeof(Patches), nameof(Patches.StartOfRoundPatch), false);
             //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
@@ -60,7 +60,8 @@ namespace EverythingCanDie
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithPlayer), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithPlayerPatch), true);
             //CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithEnemy), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithEnemyPatch), true);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemy), new []{ typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), false);
-            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
+            // i could fix this, but i do not know wtf is going on in this code anymore so bandaid it is
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
             //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             if (FindType("LethalThings.RocketLauncher") != null)
@@ -71,7 +72,7 @@ namespace EverythingCanDie
             {
                 hasEvaisaHammer = true;
             }
-            Logger.LogInfo(":]");
+            Logger.LogInfo("Patching should be complete now :]");
         }
 
         public static Type FindType(string fullName)

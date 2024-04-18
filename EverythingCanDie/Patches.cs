@@ -383,160 +383,19 @@ namespace EverythingCanDie
             return false;
         }
 
-        public static void CreateHealthConfigEntry(EnemyType mob, ConfigDefinition originalDefinition = null)
+        public static void CreateHealthConfigEntry(EnemyType mob)
         {
             EnemyAI enemy = mob.enemyPrefab.GetComponent<EnemyAI>();
             string mobName = Plugin.RemoveInvalidCharacters(mob.enemyName).ToUpper();
-            if (originalDefinition == null)
+            ConfigEntry<int> tempEntry;
+            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                 mobName + ".Health", // The key of the configuration option in the configuration file
+                                 enemy.enemyHP, // The default value
+                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+            if (Plugin.Can("HealthAllMobs"))
             {
-                ConfigEntry<int> tempEntry;
-                if (mobName.Equals("BLOB"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-
-                }
-                else if (mobName.Equals("CRAWLER"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("FLOWERMAN"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("FORESTGIANT"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("JESTER"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("MASKED"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("MOUTHDOG"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("PUFFER"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("BUNKERSPIDER"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("EARTHLEVIATHAN"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else if (mobName.Equals("SPRING"))
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                else
-                {
-                    tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                         mobName + ".Health", // The key of the configuration option in the configuration file
-                                         enemy.enemyHP, // The default value
-                                         "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
-                }
-                if (Plugin.Can("HealthAllMobs"))
-                {
-                    enemy.enemyHP = tempEntry.Value;
-                    Plugin.Log.LogInfo("Set " + enemy.name + " hp to " + enemy.enemyHP);
-                }
-            }
-            else
-            {
-                if (mobName.Equals("BLOB"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
-                }
-                else if (mobName.Equals("CRAWLER"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("8");
-                }
-                else if (mobName.Equals("FLOWERMAN"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("9");
-                }
-                else if (mobName.Equals("FORESTGIANT"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("11");
-                }
-                else if (mobName.Equals("JESTER"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("9");
-                }
-                else if (mobName.Equals("MASKED"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
-                }
-                else if (mobName.Equals("MOUTHDOG"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("11");
-                }
-                else if (mobName.Equals("PUFFER"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
-                }
-                else if (mobName.Equals("BUNKERSPIDER"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("7");
-                }
-                else if (mobName.Equals("EARTHLEVIATHAN"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("15");
-                }
-                else if (mobName.Equals("SPRING"))
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("10");
-                }
-                else
-                {
-                    Plugin.Instance.Config[originalDefinition].SetSerializedValue("6");
-                }
-                if (Plugin.Can("HealthAllMobs"))
-                {
-                    EnemyAI enemy = mob.enemyPrefab.GetComponent<EnemyAI>();
-                    enemy.enemyHP = int.Parse(Plugin.Instance.Config[originalDefinition].BoxedValue.ToString());
-                    Plugin.Log.LogInfo("Set " + enemy.name + " hp to " + enemy.enemyHP);
-                }
+                enemy.enemyHP = tempEntry.Value;
+                Plugin.Log.LogInfo("Set " + enemy.name + " hp to " + enemy.enemyHP);
             }
         }
 

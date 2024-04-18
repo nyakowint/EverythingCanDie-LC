@@ -6,6 +6,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.Reflection;
+using Unity.Netcode;
 
 // ReSharper disable InconsistentNaming
 namespace EverythingCanDie
@@ -222,7 +223,7 @@ namespace EverythingCanDie
         {
             if (!(__instance == null))
             {
-                if (!__instance.isEnemyDead && __instance.IsOwner)
+                if (__instance.IsOwner)
                 {
                     EnemyType type = __instance.enemyType;
                     string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
@@ -289,6 +290,7 @@ namespace EverythingCanDie
                         {
                             __instance.agent.enabled = false;
                         }
+                        __instance.GetComponent<NetworkObject>().Despawn();
                     }
                 }
             }
@@ -296,7 +298,8 @@ namespace EverythingCanDie
 
         public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
-            if (!(__instance == null)) {
+            if (!(__instance == null))
+            {
                 if (!__instance.isEnemyDead)
                 {
                     EnemyType type = __instance.enemyType;
@@ -475,7 +478,7 @@ namespace EverythingCanDie
                     GameObject obj = hits[j].transform.gameObject;
                     if (obj.TryGetComponent(out IHittable hittable))
                     {
-                        if (ReferenceEquals(hittable, gun.playerHeldBy)) 
+                        if (ReferenceEquals(hittable, gun.playerHeldBy))
                             continue; // self hit
                         EnemyAI ai = null;
                         if (hittable is EnemyAICollisionDetect detect)
@@ -484,14 +487,14 @@ namespace EverythingCanDie
                         {
                             if (!playerFired)
                                 continue; // enemy hit enemy
-                            if (ai.isEnemyDead || ai.enemyHP <= 0 || !ai.enemyType.canDie) 
+                            if (ai.isEnemyDead || ai.enemyHP <= 0 || !ai.enemyType.canDie)
                                 continue; // skip dead things
                         }
-                        if (hittable is PlayerControllerB) 
+                        if (hittable is PlayerControllerB)
                             targets.Add(obj);
-                        else if (ai != null) 
+                        else if (ai != null)
                             targets.Add(obj);
-                        else if (playerFired) 
+                        else if (playerFired)
                             targets.Add(obj);
                         else continue; // enemy hit something else (webs?)
                         end = hits[j].point;

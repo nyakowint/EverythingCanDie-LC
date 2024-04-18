@@ -79,7 +79,7 @@ namespace EverythingCanDie
                                              true, // The default value
                                              "The value of whether this mob is able to be shot with rockets from LethalThings rocket launcher(optional if LethalThings is installed)."); // Description
                 }
-                else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
                     CreateHealthConfigEntry(enemy);
                 }
@@ -171,7 +171,7 @@ namespace EverythingCanDie
                                              true, // The default value
                                              "The value of whether this mob is able to be shot with rockets from LethalThings rocket launcher(optional if LethalThings is installed)."); // Description
                 }
-                else if (Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
+                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
                 {
                     CreateHealthConfigEntry(enemy);
                 }

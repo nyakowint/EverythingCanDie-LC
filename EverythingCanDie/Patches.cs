@@ -1,4 +1,4 @@
-﻿using BepInEx.Configuration;
+using BepInEx.Configuration;
 using GameNetcodeStuff;
 using System.Collections.Generic;
 using System;
@@ -6,7 +6,7 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.Reflection;
-using Unity.Netcode;
+using System.Collections;
 
 // ReSharper disable InconsistentNaming
 namespace EverythingCanDie
@@ -290,7 +290,7 @@ namespace EverythingCanDie
                         {
                             __instance.agent.enabled = false;
                         }
-                        __instance.GetComponent<NetworkObject>().Despawn();
+                        __instance.StartCoroutine(MoveBody(__instance, 4));
                     }
                 }
             }
@@ -367,11 +367,13 @@ namespace EverythingCanDie
                                 Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
                                 if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
                                 {
-                                    __instance.KillEnemyOnOwnerClient(true);
+                                    __instance.KillEnemyOnOwnerClient(false);
+                                    __instance.StartCoroutine(MoveBody(__instance, 0));
                                 }
                                 else
                                 {
-                                    __instance.KillEnemyOnOwnerClient(type.destroyOnDeath);
+                                    __instance.KillEnemyOnOwnerClient(false);
+                                    __instance.StartCoroutine(MoveBody(__instance, 4));
                                 }
                             }
                         }
@@ -379,6 +381,16 @@ namespace EverythingCanDie
                 }
             }
         }
+
+        static IEnumerator MoveBody(EnemyAI __instance, int time)
+        {
+            yield return new WaitForSeconds(time);
+
+            Vector3 OriginalBodyPos = new Vector3(-10000, -10000, -10000);
+            __instance.transform.position = OriginalBodyPos;
+            __instance.SyncPositionToClients();
+        }
+
 
         public static bool ReplaceShotgunCode(ref ShotgunItem __instance, Vector3 shotgunPosition, Vector3 shotgunForward)
         {

@@ -309,6 +309,9 @@ namespace EverythingCanDie
                                 Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
                                 if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
                                 {
+                                    Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                                    RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                                    HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
                                     __instance.KillEnemyOnOwnerClient(false);
                                     __instance.StartCoroutine(MoveBody(__instance, 0));
                                 }

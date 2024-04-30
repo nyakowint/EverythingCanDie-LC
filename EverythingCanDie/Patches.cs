@@ -336,7 +336,6 @@ namespace EverythingCanDie
             __instance.SyncPositionToClients();
         }
 
-
         public static bool ReplaceShotgunCode(ref ShotgunItem __instance, Vector3 shotgunPosition, Vector3 shotgunForward)
         {
             ShootGun(__instance, shotgunPosition, shotgunForward);

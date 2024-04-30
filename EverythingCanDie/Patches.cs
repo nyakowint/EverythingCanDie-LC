@@ -241,11 +241,6 @@ namespace EverythingCanDie
                 if (!__instance.isEnemyDead)
                 {
                     EnemyType type = __instance.enemyType;
-                    if (AlreadyKillableEnemies.Contains(type.enemyName))
-                    {
-                        return;
-                    }
-
                     string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
                     bool canDamage = true;
                     if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
@@ -290,13 +285,18 @@ namespace EverythingCanDie
                         {
                             if (__instance.creatureAnimator != null)
                             {
-                                __instance.creatureAnimator.SetTrigger(Damage);
+                                if (!AlreadyKillableEnemies.Contains(type.enemyName))
+                                {
+                                    __instance.creatureAnimator.SetTrigger(Damage);
+                                }
                             }
                             if (__instance.enemyHP - force > 0)
                             {
-                                __instance.enemyHP -= force;
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {type.canDie}");
+                                if (!AlreadyKillableEnemies.Contains(type.enemyName))
+                                {
+                                    __instance.enemyHP -= force;
+                                }
+                                Plugin.Log.LogInfo($"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {type.canDie}");
                             }
                             else
                             {
@@ -304,6 +304,7 @@ namespace EverythingCanDie
                                 Plugin.Log.LogInfo(
                                 $"Enemy Hit: {name}, health: {0}, canDie: {type.canDie}");
                             }
+
                             if (__instance.enemyHP <= 0)
                             {
                                 Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");

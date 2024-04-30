@@ -301,8 +301,7 @@ namespace EverythingCanDie
                             else
                             {
                                 __instance.enemyHP = 0;
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {name}, health: {0}, canDie: {type.canDie}");
+                                Plugin.Log.LogInfo($"Enemy Hit: {name}, health: {0}, canDie: {type.canDie}");
                             }
 
                             if (__instance.enemyHP <= 0)
@@ -310,16 +309,29 @@ namespace EverythingCanDie
                                 Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
                                 if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
                                 {
-                                    Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
-                                    RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
-                                    HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
-                                    __instance.KillEnemyOnOwnerClient(false);
-                                    __instance.StartCoroutine(MoveBody(__instance, 0));
+                                    if (__instance.enemyType.enemyName == "Nutcracker" || __instance.enemyType.enemyName == "Butler")
+                                    {
+                                        Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                                        RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                                        __instance.KillEnemyOnOwnerClient(false);
+                                    }
+                                    else
+                                    {
+                                        Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                                        RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                                        __instance.KillEnemyOnOwnerClient(false);
+                                        __instance.StartCoroutine(MoveBody(__instance, 0.1f));
+                                    }
                                 }
                                 else
                                 {
                                     __instance.KillEnemyOnOwnerClient(false);
-                                    __instance.StartCoroutine(MoveBody(__instance, 4));
+                                    if (AlreadyKillableEnemies.Contains(type.enemyName))
+                                    {
+                                        __instance.StartCoroutine(MoveBody(__instance, 4));
+                                    }
                                 }
                             }
                         }
@@ -328,7 +340,7 @@ namespace EverythingCanDie
             }
         }
 
-        static IEnumerator MoveBody(EnemyAI __instance, int time)
+        static IEnumerator MoveBody(EnemyAI __instance, float time)
         {
             yield return new WaitForSeconds(time);
 

@@ -5,7 +5,6 @@ using System;
 using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using System.Reflection;
 using System.Collections;
 
 // ReSharper disable InconsistentNaming
@@ -13,6 +12,8 @@ namespace EverythingCanDie
 {
     public class Patches
     {
+        public static List<string> AlreadyKillableEnemies = new List<string>();
+
         private static readonly int Damage = Animator.StringToHash("damage");
 
         public static void RoundManagerPatch()
@@ -178,6 +179,20 @@ namespace EverythingCanDie
                 }
             }
 
+            foreach (EnemyType enemy in Plugin.enemies)
+            {
+                string name = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
+
+                if (enemy.canDie)
+                {
+                    AlreadyKillableEnemies.Add(enemy.enemyName);
+                }
+                else if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
+                {
+                    enemy.canDie = true;
+                }
+            }
+
             if (StartOfRound.Instance != null)
             {
                 if (Plugin.explosionPrefab == null && StartOfRound.Instance.explosionPrefab != null)
@@ -219,83 +234,6 @@ namespace EverythingCanDie
             return true;
         }
 
-        public static void KillEnemyPatch(ref EnemyAI __instance, bool destroy = false)
-        {
-            if (!(__instance == null))
-            {
-                if (__instance.IsOwner)
-                {
-                    EnemyType type = __instance.enemyType;
-                    string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
-                    if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
-                    {
-                        Plugin.Log.LogInfo($"Exploding {name}");
-                        __instance.enemyType.canDie = true;
-                        var enemyPos = __instance.transform.position;
-                        if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
-                        {
-                            Object.Instantiate(Plugin.explosionPrefab, enemyPos, Quaternion.Euler(-90f, 0f, 0f),
-                            RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
-
-                            HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
-                        }
-                        __instance.isEnemyDead = true;
-                        __instance.gameObject.AddComponent<Plugin.KilledEnemy>();
-                        ScanNodeProperties componentInChildren = __instance.gameObject.GetComponentInChildren<ScanNodeProperties>();
-                        if (componentInChildren != null && (bool)componentInChildren.gameObject.GetComponent<Collider>())
-                        {
-                            componentInChildren.gameObject.GetComponent<Collider>().enabled = false;
-                        }
-                        if (__instance.creatureVoice != null)
-                        {
-                            if (__instance.dieSFX != null)
-                            {
-                                __instance.creatureVoice.PlayOneShot(__instance.dieSFX);
-                            }
-                        }
-                        if (__instance is NutcrackerEnemyAI)
-                        {
-                            NutcrackerEnemyAI ai = (NutcrackerEnemyAI)__instance;
-                            ai.targetTorsoDegrees = 0;
-                            ai.StopInspection();
-                            System.Type nut = typeof(EnemyAI);
-                            MethodInfo sReload_method = nut.GetMethod("StopReloading", BindingFlags.NonPublic | BindingFlags.Instance);
-                            sReload_method.Invoke(__instance, null);
-                            Vector3 position = enemyPos + Vector3.up * 0.6f;
-                            ai.creatureVoice.Stop();
-                            ai.torsoTurnAudio.Stop();
-                            ai.gunPrefab.SetActive(false);
-                            ai.gun.gameObject.SetActive(false);
-                        }
-                        try
-                        {
-                            if (__instance.creatureAnimator != null)
-                            {
-                                __instance.creatureAnimator.SetBool("Stunned", value: false);
-                                __instance.creatureAnimator.SetBool("stunned", value: false);
-                                __instance.creatureAnimator.SetBool("stun", value: false);
-                                __instance.creatureAnimator.SetTrigger("KillEnemy");
-                                __instance.creatureAnimator.SetBool("Dead", value: true);
-                            }
-                        }
-                        catch (Exception arg)
-                        {
-                            Debug.LogError($"enemy did not have bool in animator in KillEnemy, error returned; {arg}");
-                        }
-                        __instance.CancelSpecialAnimationWithPlayer();
-                        System.Type typ = typeof(EnemyAI);
-                        MethodInfo target_method = typ.GetMethod("SubtractFromPowerLevel", BindingFlags.NonPublic | BindingFlags.Instance);
-                        target_method.Invoke(__instance, null);
-                        if (__instance.agent != null)
-                        {
-                            __instance.agent.enabled = false;
-                        }
-                        __instance.StartCoroutine(MoveBody(__instance, 4));
-                    }
-                }
-            }
-        }
-
         public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null, bool playHitSFX = false, int hitID = -1)
         {
             if (!(__instance == null))
@@ -310,7 +248,6 @@ namespace EverythingCanDie
                         if (playerWhoHit != null)
                         {
                             GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
-                            type.canDie = true;
                             if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
                             {
                                 if (!(held is ShotgunItem))
@@ -348,32 +285,53 @@ namespace EverythingCanDie
                         {
                             if (__instance.creatureAnimator != null)
                             {
-                                __instance.creatureAnimator.SetTrigger(Damage);
+                                if (!AlreadyKillableEnemies.Contains(type.enemyName))
+                                {
+                                    __instance.creatureAnimator.SetTrigger(Damage);
+                                }
                             }
                             if (__instance.enemyHP - force > 0)
                             {
-                                __instance.enemyHP -= force;
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {type.canDie}");
+                                if (!AlreadyKillableEnemies.Contains(type.enemyName))
+                                {
+                                    __instance.enemyHP -= force;
+                                }
+                                Plugin.Log.LogInfo($"Enemy Hit: {name}, health: {__instance.enemyHP - force}, canDie: {type.canDie}");
                             }
                             else
                             {
                                 __instance.enemyHP = 0;
-                                Plugin.Log.LogInfo(
-                                $"Enemy Hit: {name}, health: {0}, canDie: {type.canDie}");
+                                Plugin.Log.LogInfo($"Enemy Hit: {name}, health: {0}, canDie: {type.canDie}");
                             }
+
                             if (__instance.enemyHP <= 0)
                             {
                                 Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
                                 if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
                                 {
-                                    __instance.KillEnemyOnOwnerClient(false);
-                                    __instance.StartCoroutine(MoveBody(__instance, 0));
+                                    if (__instance.enemyType.enemyName == "Nutcracker" || __instance.enemyType.enemyName == "Butler")
+                                    {
+                                        Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                                        RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                                        __instance.KillEnemyOnOwnerClient(false);
+                                    }
+                                    else
+                                    {
+                                        Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                                        RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                                        __instance.KillEnemyOnOwnerClient(false);
+                                        __instance.StartCoroutine(MoveBody(__instance, 0.1f));
+                                    }
                                 }
                                 else
                                 {
                                     __instance.KillEnemyOnOwnerClient(false);
-                                    __instance.StartCoroutine(MoveBody(__instance, 4));
+                                    if (AlreadyKillableEnemies.Contains(type.enemyName))
+                                    {
+                                        __instance.StartCoroutine(MoveBody(__instance, 4));
+                                    }
                                 }
                             }
                         }
@@ -382,7 +340,7 @@ namespace EverythingCanDie
             }
         }
 
-        static IEnumerator MoveBody(EnemyAI __instance, int time)
+        static IEnumerator MoveBody(EnemyAI __instance, float time)
         {
             yield return new WaitForSeconds(time);
 
@@ -390,7 +348,6 @@ namespace EverythingCanDie
             __instance.transform.position = OriginalBodyPos;
             __instance.SyncPositionToClients();
         }
-
 
         public static bool ReplaceShotgunCode(ref ShotgunItem __instance, Vector3 shotgunPosition, Vector3 shotgunForward)
         {
@@ -406,7 +363,7 @@ namespace EverythingCanDie
             tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
                                  mobName + ".Health", // The key of the configuration option in the configuration file
                                  enemy.enemyHP, // The default value
-                                 "The value of the mobs health.(Default Vanilla is 3 for most mobs)"); // Description
+                                 "The value of the mobs health.(Default Vanilla is 3 for most unkillable mobs)"); // Description
             if (Plugin.Can("HealthAllMobs"))
             {
                 enemy.enemyHP = tempEntry.Value;
@@ -582,7 +539,7 @@ namespace EverythingCanDie
             }
         }
 
-        public static System.Collections.IEnumerator DelayedEarsRinging(float effectSeverity)
+        public static IEnumerator DelayedEarsRinging(float effectSeverity)
         {
             yield return new WaitForSeconds(0.6f);
             SoundManager.Instance.earsRingingTimer = effectSeverity;

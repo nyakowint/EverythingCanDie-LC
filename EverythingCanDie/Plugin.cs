@@ -17,7 +17,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.2.12";
+        public const string Version = "1.2.17";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
@@ -59,7 +59,7 @@ namespace EverythingCanDie
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.DoAIInterval), null, typeof(Patches), nameof(Patches.DoAIIntervalPatch), true);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithPlayer), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithPlayerPatch), true);
             //CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithEnemy), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithEnemyPatch), true);
-            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemyOnLocalClient), new[] { typeof(int), typeof(Vector3), typeof(PlayerControllerB), typeof(bool), typeof(int) },typeof(Patches), nameof(Patches.HitEnemyLocalPatch), false);
             //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             if (FindType("LethalThings.RocketLauncher") != null)

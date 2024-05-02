@@ -291,18 +291,18 @@ namespace EverythingCanDie
                         if (Bonkable.Contains(__instance.enemyType.enemyName))
                         {
                             __instance.enemyHP += force;
-                            Plugin.Log.LogInfo(__instance.enemyType.enemyName + " in in the Bonkable list");
+                            Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is in the Bonkable list");
                         }
                         else
                         {
                             if (!NotBonkable.Contains(__instance.enemyType.enemyName))
                             {
-                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable");
+                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable list");
                                 CanEnemyGetBonked(__instance);
                             }
                             else
                             {
-                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " in in the NotBonkable list");
+                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is in the NotBonkable list");
                             }
                         }
                         if (__instance.creatureAnimator != null)
@@ -378,12 +378,12 @@ namespace EverythingCanDie
                 Bonkable.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
                 __instance.enemyHP++;
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is added to the Bonkable list: " + __instance.enemyHP + "HP");
+                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " has been added to the Bonkable list: " + __instance.enemyHP + "HP");
             }
             else
             {
                 NotBonkable.Add(__instance.enemyType.enemyName);
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is added to the NotBonkable list: " + __instance.enemyHP + "HP");
+                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " has been added to the NotBonkable list: " + __instance.enemyHP + "HP");
             }
         }
 

@@ -356,7 +356,6 @@ namespace EverythingCanDie
                         }
                     }
                 }
-                currentEnemy = 9999998;
             }
         }
 

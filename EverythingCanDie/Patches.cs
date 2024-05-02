@@ -19,6 +19,8 @@ namespace EverythingCanDie
 
         public static List<string> NotBonkable = new List<string>();
 
+        private static ulong currentEnemy = 9999998;
+
         private static readonly int Damage = Animator.StringToHash("damage");
 
         public static void RoundManagerPatch()
@@ -245,6 +247,9 @@ namespace EverythingCanDie
         {
             if (!(__instance == null))
             {
+                if (currentEnemy == __instance.NetworkObject.NetworkObjectId) return;
+                currentEnemy = __instance.NetworkObject.NetworkObjectId;
+
                 EnemyType type = __instance.enemyType;
                 string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
                 bool canDamage = true;
@@ -297,7 +302,7 @@ namespace EverythingCanDie
                         {
                             if (!NotBonkable.Contains(__instance.enemyType.enemyName))
                             {
-                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable list");
+                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable");
                                 CanEnemyGetBonked(__instance);
                             }
                             else
@@ -351,6 +356,7 @@ namespace EverythingCanDie
                         }
                     }
                 }
+                currentEnemy = 9999998;
             }
         }
 

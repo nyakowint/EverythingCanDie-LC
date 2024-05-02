@@ -241,7 +241,7 @@ namespace EverythingCanDie
             return true;
         }
 
-        public static void HitEnemyLocalPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null)
+        public static void HitEnemyClientPatch(ref EnemyAI __instance, int force, int playerWhoHit)
         {
             if (!(__instance == null))
             {
@@ -250,9 +250,9 @@ namespace EverythingCanDie
                 bool canDamage = true;
                 if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                 {
-                    if (playerWhoHit != null)
+                    if (StartOfRound.Instance.allPlayerScripts[playerWhoHit] != null)
                     {
-                        GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
+                        GrabbableObject held = StartOfRound.Instance.allPlayerScripts[playerWhoHit].ItemSlots[StartOfRound.Instance.allPlayerScripts[playerWhoHit].currentItemSlot];
                         if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
                         {
                             if (!(held is ShotgunItem))
@@ -366,24 +366,24 @@ namespace EverythingCanDie
         public static void CanEnemyGetBonked(EnemyAI __instance)
         {
             int beforeHitHP = __instance.enemyHP;
-            Plugin.Log.LogInfo("Before HitEnemy() enemy HP: " + beforeHitHP);
+            Plugin.Log.LogInfo("Before HitEnemy() " + __instance.enemyType.enemyName + " HP: " + beforeHitHP);
 
             __instance.HitEnemy();
 
             int afterHitHP = __instance.enemyHP;
-            Plugin.Log.LogInfo("After HitEnemy() enemy HP: " + afterHitHP);
+            Plugin.Log.LogInfo("After HitEnemy()" + __instance.enemyType.enemyName + " HP: " + afterHitHP);
 
             if (beforeHitHP != afterHitHP && !Bonkable.Contains(__instance.enemyType.enemyName))
             {
                 Bonkable.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
                 __instance.enemyHP++;
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is added to the Bonkable list " + __instance.enemyHP);
+                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is added to the Bonkable list: " + __instance.enemyHP + "HP");
             }
             else
             {
                 NotBonkable.Add(__instance.enemyType.enemyName);
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is added to the NotBonkable list " + __instance.enemyHP);
+                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is added to the NotBonkable list: " + __instance.enemyHP + "HP");
             }
         }
 

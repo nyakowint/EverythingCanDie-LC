@@ -59,7 +59,7 @@ namespace EverythingCanDie
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.DoAIInterval), null, typeof(Patches), nameof(Patches.DoAIIntervalPatch), true);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithPlayer), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithPlayerPatch), true);
             //CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.OnCollideWithEnemy), new[] { typeof(Collider) }, typeof(Patches), nameof(Patches.OnCollideWithEnemyPatch), true);
-            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemyClientRpc), new[] { typeof(int), typeof(int), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyClientPatch), false);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemyServerRpc), new[] { typeof(int), typeof(int), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyClientPatch), false);
             //CreateHarmonyPatch(Harmony, typeof(RoundManager), nameof(RoundManager.SpawnEnemyGameObject), new[] { typeof(Vector3), typeof(float), typeof(int), typeof(EnemyType) }, typeof(Patches), nameof(Patches.PatchSpawnEnemyGameObject), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             if (FindType("LethalThings.RocketLauncher") != null)

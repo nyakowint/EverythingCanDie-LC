@@ -190,7 +190,10 @@ namespace EverythingCanDie
                     {
                         if (Bonkable.Contains(__instance.enemyType.enemyName))
                         {
-                            __instance.enemyHP += force;
+                            if(__instance.enemyHP <= 0) 
+                            {
+                                __instance.enemyHP += force;
+                            }
                             Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is in the Bonkable list");
                         }
                         else
@@ -278,6 +281,7 @@ namespace EverythingCanDie
             {
                 Bonkable.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
+                __instance.enemyHP++;
                 Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the Bonkable list " + __instance.enemyHP);
             }
             else

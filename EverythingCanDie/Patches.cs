@@ -190,7 +190,7 @@ namespace EverythingCanDie
                     {
                         if (Bonkable.Contains(__instance.enemyType.enemyName))
                         {
-                            if(__instance.enemyHP > 0) 
+                            if(__instance.enemyHP > 1) 
                             {
                                 __instance.enemyHP += force;
                             }

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using Unity.Netcode;
 using UnityEngine;
 
 namespace EverythingCanDie
@@ -17,7 +16,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.2.17";
+        public const string Version = "1.2.18";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
@@ -46,6 +45,7 @@ namespace EverythingCanDie
 
         private void Awake()
         {
+            
             Harmony = new Harmony(PluginInfo.Guid);
             if (Instance == null)
             {
@@ -55,6 +55,7 @@ namespace EverythingCanDie
             Log = Logger;
             CreateHarmonyPatch(Harmony, typeof(StartOfRound), "Start", null, typeof(Patches), nameof(Patches.StartOfRoundPatch), false);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyPatch), false);
+            CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemy), new[] { typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             if (FindType("LethalThings.RocketLauncher") != null)
             {
@@ -93,7 +94,7 @@ namespace EverythingCanDie
         {
             if (typeToPatch == null || patchType == null)
             {
-                Plugin.Log.LogInfo("Type is either incorrect or does not exist!");
+                Log.LogInfo("Type is either incorrect or does not exist!");
                 return;
             }
             MethodInfo Method = AccessTools.Method(typeToPatch, methodToPatch, parameters, null);
@@ -126,7 +127,7 @@ namespace EverythingCanDie
 
         public static bool Can(string identifier)
         {
-            if (Plugin.Instance.Config[new ConfigDefinition("Mobs", identifier)].BoxedValue.ToString().ToUpper().Equals("TRUE"))
+            if (Instance.Config[new ConfigDefinition("Mobs", identifier)].BoxedValue.ToString().ToUpper().Equals("TRUE"))
             {
                 return true;
             }
@@ -136,21 +137,21 @@ namespace EverythingCanDie
         public static bool CanMob(string parentIdentifier, string identifier, string mobName)
         {
             string mob = RemoveInvalidCharacters(mobName).ToUpper();
-            if (Plugin.Instance.Config[new ConfigDefinition("Mobs", parentIdentifier)].BoxedValue.ToString().ToUpper().Equals("TRUE"))
+            if (Instance.Config[new ConfigDefinition("Mobs", parentIdentifier)].BoxedValue.ToString().ToUpper().Equals("TRUE"))
             {
-                foreach (ConfigDefinition entry in Plugin.Instance.Config.Keys)
+                foreach (ConfigDefinition entry in Instance.Config.Keys)
                 {
                     if (RemoveInvalidCharacters(entry.Key.ToUpper()).Equals(RemoveInvalidCharacters(mob + identifier.ToUpper())))
                     {
-                        return Plugin.Instance.Config[entry].BoxedValue.ToString().ToUpper().Equals("TRUE");
+                        return Instance.Config[entry].BoxedValue.ToString().ToUpper().Equals("TRUE");
                     }
                 }
-                Plugin.Log.LogInfo(identifier + ": No mob found!");
+                Log.LogInfo(identifier + ": No mob found!");
                 return false;
             }
             else
             {
-                Plugin.Log.LogInfo(parentIdentifier + ": All mobs disabled!");
+                Log.LogInfo(parentIdentifier + ": All mobs disabled!");
 
             }
             return false;
@@ -163,14 +164,6 @@ namespace EverythingCanDie
             line.start = start;
             line.end = end;
             line.Prep();
-        }
-
-        public class KilledEnemy : NetworkBehaviour
-        {
-            void Awake()
-            {
-                Plugin.Log.LogInfo("Killed!");
-            }
         }
 
         public class FadeOutLine : MonoBehaviour

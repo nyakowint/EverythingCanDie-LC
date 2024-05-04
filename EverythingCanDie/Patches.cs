@@ -6,18 +6,20 @@ using System.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
 using System.Collections;
+using Unity.Netcode;
 
 // ReSharper disable InconsistentNaming
 namespace EverythingCanDie
 {
-
     public class Patches
     {
         public static List<string> UnkillableEnemies = new List<string>();
 
-        public static List<string> Bonkable = new List<string>();
+        public static List<string> BonkableEnemies = new List<string>();
 
-        public static List<string> NotBonkable = new List<string>();
+        public static List<string> NotBonkableEnemies = new List<string>();
+
+        public static List<string> InvalidEnemies = new List<string>();
 
         private static readonly int Damage = Animator.StringToHash("damage");
 
@@ -52,64 +54,88 @@ namespace EverythingCanDie
                                              true, // The default value
                                              "If this is set to false the enemies health will remain the same otherwise have fun configging."); // Description
             }
+
             foreach (EnemyType enemy in Plugin.enemies)
             {
-                string mobName = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Unimmortal")))
+                try
                 {
-                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Unimmortal", // The key of the configuration option in the configuration file
-                                             true, // The default value
-                                             "If true this mob will explode and if immortal it will also be killable."); // Description
+                    string mobName = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
+                    if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Unimmortal")))
+                    {
+                        ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                                mobName + ".Unimmortal", // The key of the configuration option in the configuration file
+                                                true, // The default value
+                                                "If true this mob will explode and if immortal it will also be killable."); // Description
+                    }
+                    if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Explodeable")))
+                    {
+                        ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                                mobName + ".Explodeable", // The key of the configuration option in the configuration file
+                                                true, // The default value
+                                                "The value of whether to spawn an explosion effect(Default on)"); // Description
+                    }
+                    if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Hittable")))
+                    {
+                        ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                                mobName + ".Hittable", // The key of the configuration option in the configuration file
+                                                true, // The default value
+                                                "The value of whether this mob is hittable with things like shovels." +
+                                                "(WARNING: If it is a modded item that happens to shoot then this might effect those items too)"); // Description
+                    }
+                    if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Shootable")))
+                    {
+                        ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                                mobName + ".Shootable", // The key of the configuration option in the configuration file
+                                                true, // The default value
+                                                "The value of whether this mob is shootable with things like shotguns.(WARNING: Only works for items that use the ShotgunItem as its parent)"); // Description
+                    }
+                    if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Rocketable")))
+                    {
+                        ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                                mobName + ".Rocketable", // The key of the configuration option in the configuration file
+                                                true, // The default value
+                                                "The value of whether this mob is able to be shot with rockets from LethalThings rocket launcher(optional if LethalThings is installed)."); // Description
+                    }
+                    if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
+                    {
+                        EnemyAI enemyAI = enemy.enemyPrefab.GetComponent<EnemyAI>();
+                        ConfigEntry<int> tempEntryHP = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
+                                                mobName + ".Health", // The key of the configuration option in the configuration file
+                                                enemyAI.enemyHP, // The default value
+                                                "The value of the mobs health.(Default Vanilla is 3 for most unkillable mobs)"); // Description
+                        if (Plugin.CanMob("HealthAllMobs", ".Unimmortal", mobName))
+                        {
+                            enemyAI.enemyHP = tempEntryHP.Value;
+                            Plugin.Log.LogInfo("Set " + enemy.name + " HP to " + enemyAI.enemyHP);
+                        }
+                    }
                 }
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Explodeable")))
+                catch (Exception)
                 {
-                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Explodeable", // The key of the configuration option in the configuration file
-                                             true, // The default value
-                                             "The value of whether to spawn an explosion effect(Default on)"); // Description
-                }
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Hittable")))
-                {
-                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Hittable", // The key of the configuration option in the configuration file
-                                             true, // The default value
-                                             "The value of whether this mob is hittable with things like shovels." +
-                                             "(WARNING: If it is a modded item that happens to shoot then this might effect those items too)"); // Description
-                }
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Shootable")))
-                {
-                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Shootable", // The key of the configuration option in the configuration file
-                                             true, // The default value
-                                             "The value of whether this mob is shootable with things like shotguns.(WARNING: Only works for items that use the ShotgunItem as its parent)"); // Description
-                }
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Rocketable")))
-                {
-                    ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                             mobName + ".Rocketable", // The key of the configuration option in the configuration file
-                                             true, // The default value
-                                             "The value of whether this mob is able to be shot with rockets from LethalThings rocket launcher(optional if LethalThings is installed)."); // Description
-                }
-                if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Health")))
-                {
-                    CreateHealthConfigEntry(enemy);
+                    Plugin.Log.LogError("It was not possible to generate the configs for the enemy: " + enemy.enemyName);
+                    InvalidEnemies.Add(enemy.enemyName);
                 }
             }
 
             foreach (EnemyType enemy in Plugin.enemies)
             {
-                string name = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
-
-                if (enemy.canDie)
+                try
                 {
-                    Plugin.Log.LogInfo("Vanilla canDie variable for " + enemy.enemyName + " = true");
+                    string name = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
+                    if (enemy.canDie)
+                    {
+                        Plugin.Log.LogInfo("Vanilla canDie variable for " + enemy.enemyName + " = true");
+                    }
+                    else if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
+                    {
+                        Plugin.Log.LogInfo("Vanilla canDie variable for " + enemy.enemyName + " = false");
+                        UnkillableEnemies.Add(enemy.enemyName);
+                        enemy.canDie = true;
+                    }
                 }
-                else if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
+                catch (Exception)
                 {
-                    Plugin.Log.LogInfo("Vanilla canDie variable for " + enemy.enemyName + " = false");
-                    UnkillableEnemies.Add(enemy.enemyName);
-                    enemy.canDie = true;
+                    Plugin.Log.LogError("It was not possible to determine whether the enemy (" + enemy.enemyName + ") was killable or not");
                 }
             }
 
@@ -125,25 +151,9 @@ namespace EverythingCanDie
             }
         }
 
-        public static void CreateHealthConfigEntry(EnemyType mob)
-        {
-            EnemyAI enemy = mob.enemyPrefab.GetComponent<EnemyAI>();
-            string mobName = Plugin.RemoveInvalidCharacters(mob.enemyName).ToUpper();
-            ConfigEntry<int> tempEntry;
-            tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
-                                 mobName + ".Health", // The key of the configuration option in the configuration file
-                                 enemy.enemyHP, // The default value
-                                 "The value of the mobs health.(Default Vanilla is 3 for most unkillable mobs)"); // Description
-            if (Plugin.Can("HealthAllMobs"))
-            {
-                enemy.enemyHP = tempEntry.Value;
-                Plugin.Log.LogInfo("Set " + enemy.name + " hp to " + enemy.enemyHP);
-            }
-        }
-
         public static void HitEnemyPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null)
         {
-            if (__instance != null && !CheckingIfBonkable)
+            if (__instance != null && !CheckingIfBonkable && !InvalidEnemies.Contains(__instance.enemyType.enemyName))
             {
                 EnemyType type = __instance.enemyType;
                 string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
@@ -188,9 +198,9 @@ namespace EverythingCanDie
                     }
                     if (canDamage)
                     {
-                        if (Bonkable.Contains(__instance.enemyType.enemyName))
+                        if (BonkableEnemies.Contains(__instance.enemyType.enemyName))
                         {
-                            if(__instance.enemyHP > 1) 
+                            if (__instance.enemyHP > 1)
                             {
                                 __instance.enemyHP += force;
                             }
@@ -198,9 +208,9 @@ namespace EverythingCanDie
                         }
                         else
                         {
-                            if (!NotBonkable.Contains(__instance.enemyType.enemyName))
+                            if (!NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
                             {
-                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable");
+                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable list");
                                 CanEnemyGetBonked(__instance);
                             }
                             else
@@ -224,46 +234,11 @@ namespace EverythingCanDie
                         }
                         if (__instance.enemyHP <= 0)
                         {
-                            Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
-                            if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
-                            {
-                                if (__instance.enemyType.enemyName == "Nutcracker" || __instance.enemyType.enemyName == "Butler")
-                                {
-                                    Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
-                                    RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
-                                    HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
-                                    __instance.KillEnemyOnOwnerClient(false);
-                                }
-                                else
-                                {
-                                    Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
-                                    RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
-                                    HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
-                                    __instance.KillEnemyOnOwnerClient(false);
-                                    __instance.StartCoroutine(MoveBody(__instance, 0.1f));
-                                }
-                            }
-                            else
-                            {
-                                __instance.KillEnemyOnOwnerClient(false);
-                                if (UnkillableEnemies.Contains(type.enemyName))
-                                {
-                                    __instance.StartCoroutine(MoveBody(__instance, 4));
-                                }
-                            }
+                            __instance.KillEnemyOnOwnerClient(false);
                         }
                     }
                 }
             }
-        }
-
-        static IEnumerator MoveBody(EnemyAI __instance, float time)
-        {
-            yield return new WaitForSeconds(time);
-
-            Vector3 OriginalBodyPos = new Vector3(-10000, -10000, -10000);
-            __instance.transform.position = OriginalBodyPos;
-            __instance.SyncPositionToClients();
         }
 
         public static void CanEnemyGetBonked(EnemyAI __instance)
@@ -277,19 +252,84 @@ namespace EverythingCanDie
             int afterHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo("Enemy HP after bonk test: " + afterHitHP);
 
-            if (beforeHitHP != afterHitHP && !Bonkable.Contains(__instance.enemyType.enemyName))
+            if (beforeHitHP != afterHitHP && !BonkableEnemies.Contains(__instance.enemyType.enemyName))
             {
-                Bonkable.Add(__instance.enemyType.enemyName);
+                BonkableEnemies.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
                 __instance.enemyHP++;
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the Bonkable list " + __instance.enemyHP);
+                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the Bonkable list, HP = " + __instance.enemyHP);
             }
             else
             {
-                NotBonkable.Add(__instance.enemyType.enemyName);
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the NotBonkable list " + __instance.enemyHP);
+                NotBonkableEnemies.Add(__instance.enemyType.enemyName);
+                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the NotBonkable list, HP =" + __instance.enemyHP);
             }
             CheckingIfBonkable = false;
+        }
+
+        public static void KillEnemyPatch(ref EnemyAI __instance)
+        {
+            if (__instance != null && !InvalidEnemies.Contains(__instance.enemyType.enemyName))
+            {
+                EnemyType type = __instance.enemyType;
+                string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
+                Plugin.Log.LogInfo($"{__instance.name} HP is {__instance.enemyHP}, killing");
+                if (Plugin.CanMob("ExplosionEffectAllMobs", ".Explodeable", name))
+                {
+                    if (__instance.enemyType.enemyName == "Nutcracker" || __instance.enemyType.enemyName == "Butler")
+                    {
+                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                        if (__instance.IsServer)
+                        {
+                            Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                            RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+
+                            if (!__instance.isEnemyDead)
+                            {
+                                __instance.KillEnemyOnOwnerClient(false);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                        if (__instance.IsServer)
+                        {
+                            Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                            RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                            if (!__instance.isEnemyDead)
+                            {
+                                __instance.KillEnemyOnOwnerClient(false);
+                            }
+                        }
+                        __instance.StartCoroutine(MoveBody(__instance, 0.1f));
+                    }
+                }
+                else
+                {
+                    if (UnkillableEnemies.Contains(type.enemyName))
+                    {
+                        if (!__instance.isEnemyDead && __instance.IsServer)
+                        {
+                            __instance.KillEnemyOnOwnerClient(false);
+                        }
+                        __instance.StartCoroutine(MoveBody(__instance, 4));
+                    }
+                }
+            }
+        }
+
+        static IEnumerator MoveBody(EnemyAI __instance, float time)
+        {
+            yield return new WaitForSeconds(time);
+
+            Vector3 OriginalBodyPos = new Vector3(-10000, -10000, -10000);
+            __instance.transform.position = OriginalBodyPos;
+            __instance.SyncPositionToClients();
+            if (__instance.enemyType.enemyName == "Blob" && __instance.IsServer)
+            {
+                __instance.GetComponent<NetworkObject>().Despawn();
+            }
         }
 
         public static bool ReplaceShotgunCode(ref ShotgunItem __instance, Vector3 shotgunPosition, Vector3 shotgunForward)

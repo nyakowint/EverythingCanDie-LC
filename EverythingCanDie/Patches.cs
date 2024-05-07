@@ -160,6 +160,11 @@ namespace EverythingCanDie
                 bool canDamage = true;
                 if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                 {
+                    if (playerWhoHit == null && __instance.enemyType.enemyName == "RadMech") 
+                    {
+                        return;
+                    }
+                    
                     if (playerWhoHit != null)
                     {
                         GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];

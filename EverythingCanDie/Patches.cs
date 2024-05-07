@@ -57,9 +57,10 @@ namespace EverythingCanDie
 
             foreach (EnemyType enemy in Plugin.enemies)
             {
+                string mobName = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
+
                 try
                 {
-                    string mobName = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
                     if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", mobName + ".Unimmortal")))
                     {
                         ConfigEntry<bool> tempEntry = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
@@ -106,36 +107,29 @@ namespace EverythingCanDie
                         if (Plugin.CanMob("HealthAllMobs", ".Unimmortal", mobName))
                         {
                             enemyAI.enemyHP = tempEntryHP.Value;
-                            Plugin.Log.LogInfo("Set " + enemy.name + " HP to " + enemyAI.enemyHP);
+                            Plugin.Log.LogInfo($"Set {enemy.name} HP to {enemyAI.enemyHP}");
                         }
                     }
                 }
                 catch (Exception)
                 {
-                    Plugin.Log.LogError("It was not possible to generate the configs for the enemy: " + enemy.enemyName);
+                    Plugin.Log.LogInfo($"It was not possible to generate the configs for the enemy: {enemy.enemyName}");
                     InvalidEnemies.Add(enemy.enemyName);
                 }
-            }
 
-            foreach (EnemyType enemy in Plugin.enemies)
-            {
                 try
                 {
-                    string name = Plugin.RemoveInvalidCharacters(enemy.enemyName).ToUpper();
-                    if (enemy.canDie)
+                    if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", mobName))
                     {
-                        Plugin.Log.LogInfo("Vanilla canDie variable for " + enemy.enemyName + " = true");
-                    }
-                    else if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
-                    {
-                        Plugin.Log.LogInfo("Vanilla canDie variable for " + enemy.enemyName + " = false");
                         UnkillableEnemies.Add(enemy.enemyName);
                         enemy.canDie = true;
                     }
+
+                    Plugin.Log.LogInfo($"Vanilla canDie variable for {enemy.enemyName} = {enemy.canDie}");
                 }
                 catch (Exception)
                 {
-                    Plugin.Log.LogError("It was not possible to determine whether the enemy (" + enemy.enemyName + ") was killable or not");
+                    Plugin.Log.LogError($"It was not possible to determine whether the enemy {enemy.enemyName} was killable or not");
                 }
             }
 
@@ -164,7 +158,7 @@ namespace EverythingCanDie
                     {
                         return;
                     }
-                    
+
                     if (playerWhoHit != null)
                     {
                         GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
@@ -177,27 +171,27 @@ namespace EverythingCanDie
                                     if (!held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
                                     {
                                         canDamage = false;
-                                        Plugin.Log.LogInfo($"Hit Disabled for {name}!");
+                                        Plugin.Log.LogInfo($"Hit Disabled for {__instance.enemyType.enemyName}!");
                                     }
                                 }
                                 else
                                 {
                                     canDamage = false;
-                                    Plugin.Log.LogInfo($"Hit Disabled for {name}!");
+                                    Plugin.Log.LogInfo($"Hit Disabled for {__instance.enemyType.enemyName}!");
                                 }
                             }
                         }
                         else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
                         {
                             canDamage = false;
-                            Plugin.Log.LogInfo($"Shoot Disabled for {name}!");
+                            Plugin.Log.LogInfo($"Shoot Disabled for {__instance.enemyType.enemyName}!");
                         }
                         else if (Plugin.hasEvaisaRPG && !Plugin.Can(name + ".Rocketable"))
                         {
                             if (held.GetType().IsEquivalentTo(Plugin.FindType("LethalThings.RocketLauncher")))
                             {
                                 canDamage = false;
-                                Plugin.Log.LogInfo($"Rockets Disabled for {name}!");
+                                Plugin.Log.LogInfo($"Rockets Disabled for {__instance.enemyType.enemyName}!");
                             }
                         }
                     }
@@ -209,18 +203,18 @@ namespace EverythingCanDie
                             {
                                 __instance.enemyHP += force;
                             }
-                            Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is in the Bonkable list");
+                            Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the Bonkable list");
                         }
                         else
                         {
                             if (!NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
                             {
-                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is not in the Bonkable or in the NotBonkable list");
+                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is not in the Bonkable or in the NotBonkable list");
                                 CanEnemyGetBonked(__instance);
                             }
                             else
                             {
-                                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is in the NotBonkable list");
+                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the NotBonkable list");
                             }
                         }
                         if (__instance.creatureAnimator != null)
@@ -230,12 +224,12 @@ namespace EverythingCanDie
                         if (__instance.enemyHP - force > 0)
                         {
                             __instance.enemyHP -= force;
-                            Plugin.Log.LogInfo($"Enemy Hit: {name}, health: {__instance.enemyHP}, canDie: {type.canDie}");
+                            Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
                         }
                         else
                         {
                             __instance.enemyHP = 0;
-                            Plugin.Log.LogInfo($"Enemy Hit: {name}, health: {__instance.enemyHP}, canDie: {type.canDie}");
+                            Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
                         }
                         if (__instance.enemyHP <= 0)
                         {
@@ -250,24 +244,24 @@ namespace EverythingCanDie
         {
             CheckingIfBonkable = true;
             int beforeHitHP = __instance.enemyHP;
-            Plugin.Log.LogInfo("Enemy HP before bonk test: " + beforeHitHP);
+            Plugin.Log.LogInfo($"Enemy HP before bonk test: {beforeHitHP}");
 
             __instance.HitEnemy();
 
             int afterHitHP = __instance.enemyHP;
-            Plugin.Log.LogInfo("Enemy HP after bonk test: " + afterHitHP);
+            Plugin.Log.LogInfo($"Enemy HP after bonk test: {afterHitHP}");
 
             if (beforeHitHP != afterHitHP && !BonkableEnemies.Contains(__instance.enemyType.enemyName))
             {
                 BonkableEnemies.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
                 __instance.enemyHP++;
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the Bonkable list, HP = " + __instance.enemyHP);
+                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is been added to the Bonkable list, HP = {__instance.enemyHP}");
             }
             else
             {
                 NotBonkableEnemies.Add(__instance.enemyType.enemyName);
-                Plugin.Log.LogInfo(__instance.enemyType.enemyName + " is been added to the NotBonkable list, HP =" + __instance.enemyHP);
+                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is been added to the NotBonkable list, HP = {__instance.enemyHP}");
             }
             CheckingIfBonkable = false;
         }

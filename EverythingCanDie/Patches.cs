@@ -154,16 +154,19 @@ namespace EverythingCanDie
 
                     if (playerWhoHit != null)
                     {
-                        GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
-                        if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
+                        if(playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot] = null) 
                         {
-                            canDamage = false;
-                            Plugin.Log.LogInfo($"Hit Disabled for {__instance.enemyType.enemyName}!");
-                        }
-                        else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
-                        {
-                            canDamage = false;
-                            Plugin.Log.LogInfo($"Shoot Disabled for {__instance.enemyType.enemyName}!");
+                            GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
+                            if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
+                            {
+                                canDamage = false;
+                                Plugin.Log.LogInfo($"Hit Disabled for {__instance.enemyType.enemyName}!");
+                            }
+                            else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
+                            {
+                                canDamage = false;
+                                Plugin.Log.LogInfo($"Shoot Disabled for {__instance.enemyType.enemyName}!");
+                            }
                         }
                     }
                     if (canDamage)

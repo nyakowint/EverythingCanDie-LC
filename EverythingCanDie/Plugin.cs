@@ -16,11 +16,10 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.2.18";
+        public const string Version = "1.2.19";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
-    [BepInDependency("Evaisa-LethalThings-0.10.3", BepInDependency.DependencyFlags.SoftDependency)]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance;
@@ -40,9 +39,6 @@ namespace EverythingCanDie
         public static int numLoosePellets = 3;
         public static float loosePelletAngle = 10f;
 
-        public static bool hasEvaisaRPG = false;
-        public static bool hasEvaisaHammer = false;
-
         private void Awake()
         {
             
@@ -57,14 +53,6 @@ namespace EverythingCanDie
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyPatch), false);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemy), new[] { typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), false);
             CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
-            if (FindType("LethalThings.RocketLauncher") != null)
-            {
-                hasEvaisaRPG = true;
-            }
-            if (FindType("LethalThings.ToyHammer") != null)
-            {
-                hasEvaisaHammer = true;
-            }
             Logger.LogInfo("Patching should be complete now :]");
         }
 
@@ -164,6 +152,35 @@ namespace EverythingCanDie
             line.start = start;
             line.end = end;
             line.Prep();
+        }
+
+        public class CountHandler
+        {
+            public List<Counter<PlayerControllerB>> player = new();
+            public List<Counter<EnemyAI>> enemy = new();
+            public List<Counter<IHittable>> other = new();
+
+            public void AddPlayerToCount(PlayerControllerB p)
+            {
+                if (player.Any(i => i.item == p)) player.First((i) => i.item == p).count++;
+                else player.Add(new Counter<PlayerControllerB>() { item = p, count = 1 });
+            }
+            public void AddEnemyToCount(EnemyAI ai)
+            {
+                if (enemy.Any(i => i.item == ai)) enemy.First((i) => i.item == ai).count++;
+                else enemy.Add(new Counter<EnemyAI>() { item = ai, count = 1 });
+            }
+            public void AddOtherToCount(IHittable hit)
+            {
+                if (other.Any(i => i.item == hit)) other.First((i) => i.item == hit).count++;
+                else other.Add(new Counter<IHittable>() { item = hit, count = 1 });
+            }
+        }
+
+        public class Counter<T>
+        {
+            public T item;
+            public int count;
         }
 
         public class FadeOutLine : MonoBehaviour

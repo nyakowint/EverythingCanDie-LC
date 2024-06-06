@@ -16,7 +16,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.2.19";
+        public const string Version = "1.2.20";
     }
 
     [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]

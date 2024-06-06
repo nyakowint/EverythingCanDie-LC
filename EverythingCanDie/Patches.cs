@@ -147,14 +147,14 @@ namespace EverythingCanDie
                 bool canDamage = true;
                 if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                 {
-                    if (playerWhoHit == null && __instance.enemyType.enemyName == "RadMech") 
+                    if (playerWhoHit == null && __instance.enemyType.enemyName == "RadMech")
                     {
                         return;
                     }
 
                     if (playerWhoHit != null)
                     {
-                        if(playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot] = null) 
+                        if (playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot] != null)
                         {
                             GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
                             if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
@@ -171,43 +171,38 @@ namespace EverythingCanDie
                     }
                     if (canDamage)
                     {
+                        if (!BonkableEnemies.Contains(__instance.enemyType.enemyName) && !NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
+                        {
+                            Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is not in the Bonkable or in the NotBonkable list");
+                            CanEnemyGetBonked(__instance);
+                        }
+
                         if (BonkableEnemies.Contains(__instance.enemyType.enemyName))
                         {
-                            if (__instance.enemyHP > 1)
-                            {
-                                __instance.enemyHP += force;
-                            }
                             Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the Bonkable list");
                         }
-                        else
+                        else if (NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
                         {
-                            if (!NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
+                            Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the NotBonkable list");
+
+                            if (__instance.creatureAnimator != null)
                             {
-                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is not in the Bonkable or in the NotBonkable list");
-                                CanEnemyGetBonked(__instance);
+                                __instance.creatureAnimator.SetTrigger(Damage);
+                            }
+                            if (__instance.enemyHP - force > 0)
+                            {
+                                __instance.enemyHP -= force;
+                                Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
                             }
                             else
                             {
-                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the NotBonkable list");
+                                __instance.enemyHP = 0;
+                                Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
                             }
-                        }
-                        if (__instance.creatureAnimator != null)
-                        {
-                            __instance.creatureAnimator.SetTrigger(Damage);
-                        }
-                        if (__instance.enemyHP - force > 0)
-                        {
-                            __instance.enemyHP -= force;
-                            Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
-                        }
-                        else
-                        {
-                            __instance.enemyHP = 0;
-                            Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
-                        }
-                        if (__instance.enemyHP <= 0)
-                        {
-                            __instance.KillEnemyOnOwnerClient(false);
+                            if (__instance.enemyHP <= 0)
+                            {
+                                __instance.KillEnemyOnOwnerClient(false);
+                            }
                         }
                     }
                 }
@@ -220,16 +215,15 @@ namespace EverythingCanDie
             int beforeHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo($"Enemy HP before bonk test: {beforeHitHP}");
 
-            __instance.HitEnemy();
+            __instance.HitEnemy(1,default,default,-3);
 
             int afterHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo($"Enemy HP after bonk test: {afterHitHP}");
 
-            if (beforeHitHP != afterHitHP && !BonkableEnemies.Contains(__instance.enemyType.enemyName))
+            if (beforeHitHP != afterHitHP)
             {
                 BonkableEnemies.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
-                __instance.enemyHP++;
                 Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is been added to the Bonkable list, HP = {__instance.enemyHP}");
             }
             else

@@ -31,7 +31,6 @@ namespace EverythingCanDie
             Plugin.items = Resources.FindObjectsOfTypeAll(typeof(Item)).Cast<Item>().Where(i => i != null).ToList();
             Plugin.ENEMY_MASK = (1 << 19);
             Plugin.PLAYER_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers | (Plugin.ENEMY_MASK & 2621448); //2621448 = enemy mask
-            Plugin.ENEMY_HIT_MASK = StartOfRound.Instance.collidersRoomMaskDefaultAndPlayers;
 
             if (!Plugin.Instance.Config.ContainsKey(new ConfigDefinition("Mobs", "UnimmortalAllMobs")))
             {
@@ -140,69 +139,75 @@ namespace EverythingCanDie
 
         public static void HitEnemyPatch(ref EnemyAI __instance, int force = 1, PlayerControllerB playerWhoHit = null)
         {
-            if (__instance != null && !CheckingIfBonkable && !InvalidEnemies.Contains(__instance.enemyType.enemyName))
+            if (__instance != null && !CheckingIfBonkable)
             {
-                EnemyType type = __instance.enemyType;
-                string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
-                bool canDamage = true;
-                if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
+                if (!InvalidEnemies.Contains(__instance.enemyType.enemyName) || !__instance.isEnemyDead) 
                 {
-                    if (playerWhoHit == null && __instance.enemyType.enemyName == "RadMech")
+                    EnemyType type = __instance.enemyType;
+                    string name = Plugin.RemoveInvalidCharacters(type.enemyName).ToUpper();
+                    bool canDamage = true;
+                    if (Plugin.CanMob("UnimmortalAllMobs", ".Unimmortal", name))
                     {
-                        return;
-                    }
-
-                    if (playerWhoHit != null)
-                    {
-                        if (playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot] != null)
+                        if (playerWhoHit == null && __instance.enemyType.enemyName == "RadMech")
                         {
-                            GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
-                            if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
-                            {
-                                canDamage = false;
-                                Plugin.Log.LogInfo($"Hit Disabled for {__instance.enemyType.enemyName}!");
-                            }
-                            else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
-                            {
-                                canDamage = false;
-                                Plugin.Log.LogInfo($"Shoot Disabled for {__instance.enemyType.enemyName}!");
-                            }
-                        }
-                    }
-                    if (canDamage)
-                    {
-                        if (!BonkableEnemies.Contains(__instance.enemyType.enemyName) && !NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
-                        {
-                            Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is not in the Bonkable or in the NotBonkable list");
-                            CanEnemyGetBonked(__instance);
+                            return;
                         }
 
-                        if (BonkableEnemies.Contains(__instance.enemyType.enemyName))
+                        if (playerWhoHit != null)
                         {
-                            Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the Bonkable list");
+                            if (playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot] != null)
+                            {
+                                GrabbableObject held = playerWhoHit.ItemSlots[playerWhoHit.currentItemSlot];
+                                if (held.itemProperties.isDefensiveWeapon && !Plugin.Can(name + ".Hittable"))
+                                {
+                                    canDamage = false;
+                                    Plugin.Log.LogInfo($"Hit Disabled for {__instance.enemyType.enemyName}!");
+                                }
+                                else if ((held is ShotgunItem) && !Plugin.Can(name + ".Shootable"))
+                                {
+                                    canDamage = false;
+                                    Plugin.Log.LogInfo($"Shoot Disabled for {__instance.enemyType.enemyName}!");
+                                }
+                            }
                         }
-                        else if (NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
-                        {
-                            Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the NotBonkable list");
 
-                            if (__instance.creatureAnimator != null)
+                        if (canDamage)
+                        {
+                            if (!BonkableEnemies.Contains(__instance.enemyType.enemyName) && !NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
                             {
-                                __instance.creatureAnimator.SetTrigger(Damage);
+                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is not in the Bonkable or in the NotBonkable list");
+                                CanEnemyGetBonked(__instance);
                             }
-                            if (__instance.enemyHP - force > 0)
+
+                            if (BonkableEnemies.Contains(__instance.enemyType.enemyName))
                             {
-                                __instance.enemyHP -= force;
-                                Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
+                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the Bonkable list");
                             }
-                            else
+                            else if (NotBonkableEnemies.Contains(__instance.enemyType.enemyName))
                             {
-                                __instance.enemyHP = 0;
-                                Plugin.Log.LogInfo($"Enemy Hit: {__instance.enemyType.enemyName}, health: {__instance.enemyHP}, canDie: {type.canDie}");
+                                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the NotBonkable list");
+
+                                if (__instance.creatureAnimator != null)
+                                {
+                                    __instance.creatureAnimator.SetTrigger(Damage);
+                                }
+                                if (__instance.enemyHP - force > 0)
+                                {
+                                    __instance.enemyHP -= force;
+                                }
+                                else
+                                {
+                                    __instance.enemyHP = 0;
+                                }
+                                if (__instance.enemyHP <= 0)
+                                {
+                                    __instance.KillEnemyOnOwnerClient(false);
+                                }
                             }
-                            if (__instance.enemyHP <= 0)
-                            {
-                                __instance.KillEnemyOnOwnerClient(false);
-                            }
+                        }
+                        else
+                        {
+                            return;
                         }
                     }
                 }
@@ -351,21 +356,26 @@ namespace EverythingCanDie
             {
                 Vector3 vect = vectorList[i];
                 ray = new Ray(shotgunPosition, vect);
-                RaycastHit[] hits = Physics.RaycastAll(ray, Plugin.range, playerFired ? Plugin.PLAYER_HIT_MASK : Plugin.ENEMY_HIT_MASK, QueryTriggerInteraction.Collide);
+                RaycastHit[] hits = Physics.RaycastAll(ray, Plugin.range, Plugin.PLAYER_HIT_MASK, QueryTriggerInteraction.Collide);
                 Array.Sort(hits, (x, y) => x.distance.CompareTo(y.distance));
                 Vector3 end = shotgunPosition + vect * Plugin.range;
                 Debug.Log("SHOTGUN: RaycastAll hit " + hits.Length + " things (" + playerFired + "," + thisPlayerFired + ")");
                 for (int j = 0; j < hits.Length; j++)
                 {
                     GameObject obj = hits[j].transform.gameObject;
+
+                    Debug.Log("obj = " + obj);
+
                     if (obj.TryGetComponent(out IHittable hittable))
                     {
                         if (ReferenceEquals(hittable, gun.playerHeldBy)) continue; // self hit
                         EnemyAI ai = null;
                         if (hittable is EnemyAICollisionDetect detect) ai = detect.mainScript;
+
+                        Debug.Log("ai = " + ai);
+
                         if (ai != null)
                         {
-                            if (!playerFired) continue; // enemy hit enemy
                             if (ai.isEnemyDead || ai.enemyHP <= 0 || !ai.enemyType.canDie) continue; // skip dead things
                         }
                         if (hittable is PlayerControllerB) counts.AddPlayerToCount(hittable as PlayerControllerB);

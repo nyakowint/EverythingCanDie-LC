@@ -12,16 +12,13 @@ using UnityEngine;
 
 namespace EverythingCanDie
 {
-    internal static class PluginInfo
+    [BepInPlugin(Guid, Name, Version)]
+    public class Plugin : BaseUnityPlugin
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.2.20";
-    }
+        public const string Version = "1.2.21";
 
-    [BepInPlugin(PluginInfo.Guid, PluginInfo.Name, PluginInfo.Version)]
-    public class Plugin : BaseUnityPlugin
-    {
         public static Plugin Instance;
         public static Harmony Harmony;
         public static ManualLogSource Log;
@@ -32,7 +29,6 @@ namespace EverythingCanDie
         public const float range = 30f;
         public static int ENEMY_MASK = (1 << 19);
         public static int PLAYER_HIT_MASK; //2621448 = enemy mask
-        public static int ENEMY_HIT_MASK;
 
         public static int numTightPellets = 2;
         public static float tightPelletAngle = 2.5f;
@@ -41,8 +37,8 @@ namespace EverythingCanDie
 
         private void Awake()
         {
-            
-            Harmony = new Harmony(PluginInfo.Guid);
+
+            Harmony = new Harmony(Guid);
             if (Instance == null)
             {
                 Instance = this;
@@ -156,9 +152,9 @@ namespace EverythingCanDie
 
         public class CountHandler
         {
-            public List<Counter<PlayerControllerB>> player = new();
-            public List<Counter<EnemyAI>> enemy = new();
-            public List<Counter<IHittable>> other = new();
+            public List<Counter<PlayerControllerB>> player = new List<Counter<PlayerControllerB>>();
+            public List<Counter<EnemyAI>> enemy = new List<Counter<EnemyAI>>();
+            public List<Counter<IHittable>> other = new List<Counter<IHittable>>();
 
             public void AddPlayerToCount(PlayerControllerB p)
             {

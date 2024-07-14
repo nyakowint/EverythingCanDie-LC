@@ -363,17 +363,11 @@ namespace EverythingCanDie
                 for (int j = 0; j < hits.Length; j++)
                 {
                     GameObject obj = hits[j].transform.gameObject;
-
-                    Debug.Log("obj = " + obj);
-
                     if (obj.TryGetComponent(out IHittable hittable))
                     {
                         if (ReferenceEquals(hittable, gun.playerHeldBy)) continue; // self hit
                         EnemyAI ai = null;
                         if (hittable is EnemyAICollisionDetect detect) ai = detect.mainScript;
-
-                        Debug.Log("ai = " + ai);
-
                         if (ai != null)
                         {
                             if (ai.isEnemyDead || ai.enemyHP <= 0 || !ai.enemyType.canDie) continue; // skip dead things

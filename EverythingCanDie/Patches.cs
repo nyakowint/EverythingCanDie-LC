@@ -257,6 +257,15 @@ namespace EverythingCanDie
                             RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
                         }
                     }
+                    else if (__instance.GetComponentInChildren<PlayerControllerB>())
+                    {
+                        HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);
+                        if (__instance.IsServer)
+                        {
+                            Object.Instantiate(Plugin.explosionPrefab, __instance.transform.position, Quaternion.Euler(-90f, 0f, 0f),
+                            RoundManager.Instance.mapPropsContainer.transform).SetActive(value: true);
+                        }
+                    }
                     else
                     {
                         HUDManager.Instance.ShakeCamera(ScreenShakeType.Small);

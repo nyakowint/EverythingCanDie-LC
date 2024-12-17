@@ -1,5 +1,5 @@
-# 1.2.12
-Fix mob health configurations not being generated in config (#21): Thanks Entity378!
+# 1.3.0
+Removed BetterShotgun code (install HexiBetterShotgunFixed instead).
 
 # 1.2.11
 Fix null references caused by v50

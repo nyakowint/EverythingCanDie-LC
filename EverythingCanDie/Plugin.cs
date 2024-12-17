@@ -17,7 +17,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.2.22";
+        public const string Version = "1.3.0";
 
         public static Plugin Instance;
         public static Harmony Harmony;
@@ -48,7 +48,6 @@ namespace EverythingCanDie
             CreateHarmonyPatch(Harmony, typeof(StartOfRound), "Start", null, typeof(Patches), nameof(Patches.StartOfRoundPatch), false);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.HitEnemy), new[] { typeof(int), typeof(PlayerControllerB), typeof(bool), typeof(int) }, typeof(Patches), nameof(Patches.HitEnemyPatch), false);
             CreateHarmonyPatch(Harmony, typeof(EnemyAI), nameof(EnemyAI.KillEnemy), new[] { typeof(bool) }, typeof(Patches), nameof(Patches.KillEnemyPatch), false);
-            CreateHarmonyPatch(Harmony, typeof(ShotgunItem), nameof(ShotgunItem.ShootGun), new[] { typeof(Vector3), typeof(Vector3) }, typeof(Patches), nameof(Patches.ReplaceShotgunCode), true);
             Logger.LogInfo("Patching should be complete now :]");
         }
 
@@ -139,78 +138,6 @@ namespace EverythingCanDie
 
             }
             return false;
-        }
-
-        public static void VisualiseShot(Vector3 start, Vector3 end)
-        {
-            GameObject trail = new GameObject("Trail Visual");
-            FadeOutLine line = trail.AddComponent<FadeOutLine>();
-            line.start = start;
-            line.end = end;
-            line.Prep();
-        }
-
-        public class CountHandler
-        {
-            public List<Counter<PlayerControllerB>> player = new List<Counter<PlayerControllerB>>();
-            public List<Counter<EnemyAI>> enemy = new List<Counter<EnemyAI>>();
-            public List<Counter<IHittable>> other = new List<Counter<IHittable>>();
-
-            public void AddPlayerToCount(PlayerControllerB p)
-            {
-                if (player.Any(i => i.item == p)) player.First((i) => i.item == p).count++;
-                else player.Add(new Counter<PlayerControllerB>() { item = p, count = 1 });
-            }
-            public void AddEnemyToCount(EnemyAI ai)
-            {
-                if (enemy.Any(i => i.item == ai)) enemy.First((i) => i.item == ai).count++;
-                else enemy.Add(new Counter<EnemyAI>() { item = ai, count = 1 });
-            }
-            public void AddOtherToCount(IHittable hit)
-            {
-                if (other.Any(i => i.item == hit)) other.First((i) => i.item == hit).count++;
-                else other.Add(new Counter<IHittable>() { item = hit, count = 1 });
-            }
-        }
-
-        public class Counter<T>
-        {
-            public T item;
-            public int count;
-        }
-
-        public class FadeOutLine : MonoBehaviour
-        {
-            private const float lifetime = 0.4f;
-            private const float width = 0.02f;
-            private static readonly Color col = new Color(1f, 0f, 0f);
-
-            private float alive = 0f;
-            private LineRenderer line;
-            public Vector3 start, end;
-            private static readonly Material mat = new Material(Shader.Find("Legacy Shaders/Particles/Alpha Blended Premultiply"));
-            public void Prep()
-            {
-                var len = Vector3.Distance(start, end);
-                var lenFrac = (range - len) / range;
-                line = gameObject.AddComponent<LineRenderer>();
-                line.startColor = col;
-                line.endColor = col * lenFrac + Color.black * (1f - lenFrac);
-                line.startWidth = width;
-                line.endWidth = lenFrac * width;
-                line.SetPositions(new Vector3[] { start, end });
-                line.material = mat;
-            }
-            void Update()
-            {
-                alive += Time.deltaTime;
-                if (alive >= lifetime) Destroy(gameObject);
-                else
-                {
-                    line.startColor = new Color(col.r, col.g, col.b, (lifetime - alive) / lifetime);
-                    line.endColor = new Color(line.endColor.r, line.endColor.g, line.endColor.b, (lifetime - alive) / lifetime);
-                }
-            }
         }
     }
 }

@@ -226,7 +226,7 @@ namespace EverythingCanDie
             int beforeHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo($"Enemy HP before bonk test: {beforeHitHP}");
 
-            __instance.HitEnemy(1,default,default,-3);
+            __instance.HitEnemy(1,default,default,-100);
 
             int afterHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo($"Enemy HP after bonk test: {afterHitHP}");

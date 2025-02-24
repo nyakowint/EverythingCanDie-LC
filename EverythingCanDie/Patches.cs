@@ -179,6 +179,11 @@ namespace EverythingCanDie
                                 CanEnemyGetBonked(__instance);
                             }
 
+                            if(__instance.isEnemyDead) 
+                            {
+                                return;
+                            }
+
                             if (BonkableEnemies.Contains(__instance.enemyType.enemyName))
                             {
                                 Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is in the Bonkable list");

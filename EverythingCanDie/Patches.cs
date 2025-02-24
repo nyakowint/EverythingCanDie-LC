@@ -210,10 +210,6 @@ namespace EverythingCanDie
                                 }
                             }
                         }
-                        else
-                        {
-                            return;
-                        }
                     }
                 }
             }

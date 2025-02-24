@@ -219,6 +219,7 @@ namespace EverythingCanDie
             if(__instance.GetComponent<NutcrackerEnemyAI>() != null)
             {
                 BonkableEnemies.Add(__instance.enemyType.enemyName);
+                Plugin.Log.LogInfo($"{__instance.enemyType.enemyName} is been added to the Bonkable list");
                 return;
             }
             

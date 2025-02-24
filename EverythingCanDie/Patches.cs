@@ -216,6 +216,12 @@ namespace EverythingCanDie
 
         public static void CanEnemyGetBonked(EnemyAI __instance)
         {
+            if(__instance.GetComponent<NutcrackerEnemyAI>() != null)
+            {
+                BonkableEnemies.Add(__instance.enemyType.enemyName);
+                return;
+            }
+            
             CheckingIfBonkable = true;
             int beforeHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo($"Enemy HP before bonk test: {beforeHitHP}");

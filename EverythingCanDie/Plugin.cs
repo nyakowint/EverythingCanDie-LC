@@ -17,7 +17,7 @@ namespace EverythingCanDie
     {
         public const string Guid = "nwnt.EverythingCanDie";
         public const string Name = "EverythingCanDie";
-        public const string Version = "1.3.0";
+        public const string Version = "1.3.1";
 
         public static Plugin Instance;
         public static Harmony Harmony;

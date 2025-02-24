@@ -95,7 +95,7 @@ namespace EverythingCanDie
                         int newEnemyHP = 3;
                         if(enemyAI.enemyHP != null)
                         {
-                            newEnemyHP = enemyAI.enemyHP
+                            newEnemyHP = enemyAI.enemyHP;
                         }
                         ConfigEntry<int> tempEntryHP = Plugin.Instance.Config.Bind("Mobs", // The section under which the option is shown
                                                 mobName + ".Health", // The key of the configuration option in the configuration file

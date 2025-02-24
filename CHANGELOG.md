@@ -1,3 +1,9 @@
+# Updates since 1.3.0
+See [the GitHub](https://github.com/nyakowint/EverythingCanDie-LC/compare/31ea6f1ef15ad8c2215ce57711329908f85c7932...main) for full details
+
+# 1.3.1
+Patch the nutcracker so it can (maybe) die
+
 # 1.3.0
 Removed BetterShotgun code (install HexiBetterShotgunFixed instead).
 

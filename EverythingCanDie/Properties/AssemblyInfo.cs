@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using EverythingCanDie;
 
-[assembly: AssemblyTitle(PluginInfo.Name)]
-[assembly: AssemblyVersion(PluginInfo.Version)]
-[assembly: AssemblyFileVersion(PluginInfo.Version)]
+[assembly: AssemblyTitle(Plugin.Name)]
+[assembly: AssemblyVersion(Plugin.Version)]
+[assembly: AssemblyFileVersion(Plugin.Version)]
 [assembly: AssemblyDescription("YEP")]

@@ -231,7 +231,7 @@ namespace EverythingCanDie
             int afterHitHP = __instance.enemyHP;
             Plugin.Log.LogInfo($"Enemy HP after bonk test: {afterHitHP}");
 
-            if (beforeHitHP != afterHitHP)
+            if (beforeHitHP != afterHitHP || __instance.isEnemyDead)
             {
                 BonkableEnemies.Add(__instance.enemyType.enemyName);
                 __instance.enemyHP = beforeHitHP;
